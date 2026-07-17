@@ -857,6 +857,27 @@ const TRANSLATION_CACHE_KEY = 'dawnbriefing_translations';
 const STALE_MS = 5 * 60 * 1000; // 5분 이내 캐시는 재수집 없이 그대로 사용
 const TOP_N = 30;
 
+// CoinGecko's anonymous/free tier allows only ~5-15 requests per minute.
+// A single market-data refresh fires ~10 CoinGecko calls (coin prices/sparklines,
+// global stats, stablecoin history, BTC trend history) — sending them all at once
+// reliably tripped the rate limit. This serializes every CoinGecko call with a
+// minimum gap between requests so the whole batch stays under the limit.
+let coinGeckoQueue = Promise.resolve();
+let coinGeckoLastCallAt = 0;
+const COINGECKO_MIN_INTERVAL_MS = 2200;
+
+function coinGeckoFetch(url){
+  const run = async () => {
+    const wait = Math.max(0, coinGeckoLastCallAt + COINGECKO_MIN_INTERVAL_MS - Date.now());
+    if (wait > 0) await new Promise(r => setTimeout(r, wait));
+    coinGeckoLastCallAt = Date.now();
+    return fetch(url);
+  };
+  const result = coinGeckoQueue.then(run, run);
+  coinGeckoQueue = result.then(() => {}, () => {});
+  return result;
+}
+
 const translationCache = new Map();
 try{
   const rawT = localStorage.getItem(TRANSLATION_CACHE_KEY);
@@ -1243,7 +1264,7 @@ async function loadIndexData(sym){
 
 async function fetchCoinGeckoSpark(id){
   try{
-    const res = await fetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=30&interval=daily');
+    const res = await coinGeckoFetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=30&interval=daily');
     const data = await res.json();
     return (data.prices || []).map(p => p[1]);
   }catch(e){
@@ -1263,7 +1284,7 @@ const CRYPTO_COINS = [
 async function loadCryptoSection(){
   try{
     const ids = CRYPTO_COINS.map(c => c.id).join(',');
-    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true');
+    const res = await coinGeckoFetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true');
     const priceData = await res.json();
 
     const sparks = await Promise.all(CRYPTO_COINS.map(c => fetchCoinGeckoSpark(c.id)));
@@ -1276,9 +1297,10 @@ async function loadCryptoSection(){
     const ethBtcRatio = (coins.eth.price && coins.btc.price) ? (coins.eth.price / coins.btc.price) : null;
 
     async function fetchJsonWithRetry(url, retries){
+      const doFetch = url.indexOf('coingecko.com') !== -1 ? coinGeckoFetch : fetch;
       for (let i = 0; i <= retries; i++){
         try{
-          const res = await fetch(url);
+          const res = await doFetch(url);
           if (!res.ok) throw new Error('http=' + res.status);
           return await res.json();
         }catch(e){
@@ -1445,7 +1467,7 @@ async function loadStablecoinSupply(){
   try{
     const ids = ['tether', 'usd-coin'];
     const results = await Promise.all(ids.map(id =>
-      fetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=30&interval=daily').then(r => r.json())
+      coinGeckoFetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=30&interval=daily').then(r => r.json())
     ));
     let currentTotal = 0, pastTotal = 0;
     const breakdown = {};
@@ -1520,15 +1542,15 @@ async function fetchBtcFullHistory(){
   let lastErr;
   for (let attempt = 0; attempt <= 2; attempt++){
     try{
-      // NOTE: omit interval=daily — CoinGecko's free tier now rejects/ignores
-      // explicit interval params on some plans; days=max alone returns daily granularity.
-      const res = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=max');
+      // CoinGecko's free/public tier only allows historical data going back
+      // ~1 year (days=max is rejected/unavailable without a paid plan).
+      const res = await coinGeckoFetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=365');
       if (!res.ok) throw new Error('http=' + res.status);
       const data = await res.json();
       const prices = data.prices || [];
       if (prices.length < 60) throw new Error('insufficient BTC history (' + prices.length + ' points)');
-      // downsample to roughly weekly points to keep the chart light
-      return prices.filter((p, i) => i % 7 === 0 || i === prices.length - 1);
+      // downsample to roughly every other day to keep the chart light
+      return prices.filter((p, i) => i % 2 === 0 || i === prices.length - 1);
     }catch(e){
       lastErr = e;
       console.warn('[btc-rainbow] history fetch attempt', attempt, 'failed:', e.message || e);
@@ -1539,10 +1561,10 @@ async function fetchBtcFullHistory(){
 }
 
 function computeLogRegression(history){
+  const t0 = history[0][0];
   const points = history.map(([ts, price]) => {
-    const days = (ts - BTC_GENESIS_MS) / 86400000;
-    if (days <= 0 || price <= 0) return null;
-    return { x: Math.log(days), y: Math.log(price) };
+    if (price <= 0) return null;
+    return { x: (ts - t0) / 86400000, y: Math.log(price) }; // x = days elapsed since window start
   }).filter(Boolean);
 
   const n = points.length;
@@ -1557,7 +1579,7 @@ function computeLogRegression(history){
   const meanR = residuals.reduce((s, r) => s + r, 0) / n;
   const stdResidual = Math.sqrt(residuals.reduce((s, r) => s + Math.pow(r - meanR, 2), 0) / n);
 
-  return { slope, intercept, stdResidual };
+  return { slope, intercept, stdResidual, t0 };
 }
 
 async function loadBtcRainbowData(){
@@ -1703,15 +1725,15 @@ function longShortBarHtml(l){
 }
 
 function bandPositionLabel(currentPrice, regression){
-  const days = (Date.now() - BTC_GENESIS_MS) / 86400000;
-  const center = regression.slope * Math.log(days) + regression.intercept;
+  const daysElapsed = (Date.now() - regression.t0) / 86400000;
+  const center = regression.slope * daysElapsed + regression.intercept;
   const z = (Math.log(currentPrice) - center) / regression.stdResidual;
   let label, tone;
-  if (z < -1.5){ label = '저평가 구간 (회귀선보다 크게 낮음)'; tone = 'up'; }
-  else if (z < -0.5){ label = '회귀선 아래쪽'; tone = 'up'; }
-  else if (z <= 0.5){ label = '회귀선 근접 (적정 구간)'; tone = 'neutral'; }
-  else if (z <= 1.5){ label = '회귀선 위쪽 (다소 고평가)'; tone = 'down'; }
-  else{ label = '고평가·과열 구간'; tone = 'down'; }
+  if (z < -1.5){ label = '추세선보다 크게 낮음'; tone = 'up'; }
+  else if (z < -0.5){ label = '추세선 아래쪽'; tone = 'up'; }
+  else if (z <= 0.5){ label = '추세선 근접 (중립)'; tone = 'neutral'; }
+  else if (z <= 1.5){ label = '추세선 위쪽 (다소 과열)'; tone = 'down'; }
+  else{ label = '추세선보다 크게 높음(과열)'; tone = 'down'; }
   return { z, label, tone };
 }
 
@@ -1723,10 +1745,14 @@ function renderBtcRainbowChart(history, regression, currentPrice){
   const bandK = [-2, -1, 0, 1, 2];
   const bandColors = ['#3B82F6', '#3FA796', '#E8A33D', '#E4572E', '#E5484D'];
 
+  function centerAt(ts){
+    const daysElapsed = (ts - regression.t0) / 86400000;
+    return regression.slope * daysElapsed + regression.intercept;
+  }
+
   const allLog = [];
   history.forEach(([ts]) => {
-    const days = Math.max(1, (ts - BTC_GENESIS_MS) / 86400000);
-    const center = regression.slope * Math.log(days) + regression.intercept;
+    const center = centerAt(ts);
     bandK.forEach(k => allLog.push(center + k * regression.stdResidual));
   });
   history.forEach(([, price]) => { if (price > 0) allLog.push(Math.log(price)); });
@@ -1740,9 +1766,7 @@ function renderBtcRainbowChart(history, regression, currentPrice){
 
   const bandPaths = bandK.map((k, idx) => {
     const pts = history.map(([ts]) => {
-      const days = Math.max(1, (ts - BTC_GENESIS_MS) / 86400000);
-      const center = regression.slope * Math.log(days) + regression.intercept;
-      const logP = center + k * regression.stdResidual;
+      const logP = centerAt(ts) + k * regression.stdResidual;
       return xPos(ts).toFixed(1) + ',' + yPos(logP).toFixed(1);
     }).join(' ');
     const isCenter = k === 0;
@@ -1763,27 +1787,27 @@ function renderBtcRainbowChart(history, regression, currentPrice){
 
 function buildBtcRainbowSection(rainbowData, currentPrice){
   if (!rainbowData || !currentPrice){
-    return '<div class="market-section-title">비트코인 장기 추세 (로그 회귀)</div>' +
+    return '<div class="market-section-title">비트코인 최근 1년 추세 채널</div>' +
       '<div class="market-wide-card"><div class="market-wide-body" style="width:100%;">' +
-        '<div class="market-error">불러오지 못했습니다. 새로고침을 눌러 다시 시도해 주세요. (첫 로딩 시 2013년치 데이터를 가져오느라 시간이 걸릴 수 있어요)</div>' +
+        '<div class="market-error">불러오지 못했습니다. 새로고침을 눌러 다시 시도해 주세요.</div>' +
       '</div></div>';
   }
   const { history, regression } = rainbowData;
   const pos = bandPositionLabel(currentPrice, regression);
   const chart = renderBtcRainbowChart(history, regression, currentPrice);
 
-  return '<div class="market-section-title">비트코인 장기 추세 (로그 회귀)</div>' +
-    nuanceBoxTone(pos.label, pos.tone, '현재가 $' + Math.round(currentPrice).toLocaleString('en-US') + '가 2013년 이후 전체 가격 데이터에 로그-로그 회귀선을 맞췄을 때 어느 위치에 있는지를 보여줍니다.') +
+  return '<div class="market-section-title">비트코인 최근 1년 추세 채널</div>' +
+    nuanceBoxTone(pos.label, pos.tone, '현재가 $' + Math.round(currentPrice).toLocaleString('en-US') + '가 최근 1년 가격 데이터에 맞춘 추세선 대비 어느 위치에 있는지를 보여줍니다. (무료 데이터 제공 범위상 1년 기준이며, 더 긴 기간은 지원되지 않습니다)') +
     '<div class="market-wide-card" style="display:block;">' +
       chart +
       '<div class="rainbow-legend">' +
-        '<span><i style="background:#3B82F6"></i>저평가</span>' +
-        '<span><i style="background:#3FA796"></i>적정</span>' +
-        '<span><i style="background:#E8A33D"></i>중립~다소 고평가</span>' +
-        '<span><i style="background:#E4572E"></i>고평가</span>' +
-        '<span><i style="background:#E5484D"></i>과열</span>' +
+        '<span><i style="background:#3B82F6"></i>낮음</span>' +
+        '<span><i style="background:#3FA796"></i>다소 낮음</span>' +
+        '<span><i style="background:#E8A33D"></i>중립</span>' +
+        '<span><i style="background:#E4572E"></i>다소 높음</span>' +
+        '<span><i style="background:#E5484D"></i>높음(과열)</span>' +
       '</div>' +
-      '<div class="market-summary-note" style="margin-top:10px;">이 회귀선은 과거 가격을 수학적으로 맞춘 통계적 추세선이며, 미래 가격을 예측하거나 보장하지 않습니다. 흰색 선은 실제 가격, 점은 현재가입니다.</div>' +
+      '<div class="market-summary-note" style="margin-top:10px;">이 추세선은 최근 1년 가격을 수학적으로 맞춘 통계적 채널이며, 미래 가격을 예측하거나 보장하지 않습니다. 흰색 선은 실제 가격, 점은 현재가입니다.</div>' +
     '</div>';
 }
 
@@ -2370,7 +2394,7 @@ async function fetchChartSeries(type, symbol, period, divideBy10){
   // coingecko
   const daysMap = { '7d':7, '1mo':30, '3mo':90, '1y':365 };
   const days = daysMap[period] || 30;
-  const res = await fetch('https://api.coingecko.com/api/v3/coins/' + symbol + '/market_chart?vs_currency=usd&days=' + days);
+  const res = await coinGeckoFetch('https://api.coingecko.com/api/v3/coins/' + symbol + '/market_chart?vs_currency=usd&days=' + days);
   const data = await res.json();
   return (data.prices || []).map(p => ({ t: p[0], v: p[1] }));
 }
