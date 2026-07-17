@@ -1517,12 +1517,25 @@ const BTC_RAINBOW_CACHE_KEY = CACHE_KEY_PREFIX + 'btc_rainbow';
 const BTC_RAINBOW_STALE_MS = 24 * 60 * 60 * 1000;
 
 async function fetchBtcFullHistory(){
-  const res = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=max&interval=daily');
-  const data = await res.json();
-  const prices = data.prices || [];
-  if (prices.length < 60) throw new Error('insufficient BTC history');
-  // downsample to roughly weekly points to keep the chart light
-  return prices.filter((p, i) => i % 7 === 0 || i === prices.length - 1);
+  let lastErr;
+  for (let attempt = 0; attempt <= 2; attempt++){
+    try{
+      // NOTE: omit interval=daily — CoinGecko's free tier now rejects/ignores
+      // explicit interval params on some plans; days=max alone returns daily granularity.
+      const res = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=max');
+      if (!res.ok) throw new Error('http=' + res.status);
+      const data = await res.json();
+      const prices = data.prices || [];
+      if (prices.length < 60) throw new Error('insufficient BTC history (' + prices.length + ' points)');
+      // downsample to roughly weekly points to keep the chart light
+      return prices.filter((p, i) => i % 7 === 0 || i === prices.length - 1);
+    }catch(e){
+      lastErr = e;
+      console.warn('[btc-rainbow] history fetch attempt', attempt, 'failed:', e.message || e);
+      if (attempt < 2) await new Promise(r => setTimeout(r, 900 * (attempt + 1)));
+    }
+  }
+  throw lastErr;
 }
 
 function computeLogRegression(history){
@@ -1749,7 +1762,12 @@ function renderBtcRainbowChart(history, regression, currentPrice){
 }
 
 function buildBtcRainbowSection(rainbowData, currentPrice){
-  if (!rainbowData || !currentPrice) return '';
+  if (!rainbowData || !currentPrice){
+    return '<div class="market-section-title">비트코인 장기 추세 (로그 회귀)</div>' +
+      '<div class="market-wide-card"><div class="market-wide-body" style="width:100%;">' +
+        '<div class="market-error">불러오지 못했습니다. 새로고침을 눌러 다시 시도해 주세요. (첫 로딩 시 2013년치 데이터를 가져오느라 시간이 걸릴 수 있어요)</div>' +
+      '</div></div>';
+  }
   const { history, regression } = rainbowData;
   const pos = bandPositionLabel(currentPrice, regression);
   const chart = renderBtcRainbowChart(history, regression, currentPrice);
