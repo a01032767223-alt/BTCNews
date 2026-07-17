@@ -595,6 +595,14 @@
     font-size:11px; color:var(--text-muted); margin-top:4px;
   }
 
+  .rainbow-chart{ width:100%; height:200px; display:block; }
+  .rainbow-legend{
+    display:flex; flex-wrap:wrap; gap:10px 14px;
+    margin-top:10px; font-size:11px; color:var(--text-muted);
+  }
+  .rainbow-legend span{ display:flex; align-items:center; gap:5px; }
+  .rainbow-legend i{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+
   .kimchi-row{
     display:flex;
     justify-content:space-between;
@@ -1499,8 +1507,73 @@ async function loadOpenInterest(){
   }
 }
 
+/* ---- Bitcoin long-term log-regression trend ("rainbow"-style bands) ----
+   This fits a power-law regression to BTC's full price history (a standard,
+   purely mathematical technique — not a specific future price prediction)
+   and shows where today's actual price sits relative to that historical
+   trend line. No future price targets are asserted. */
+const BTC_GENESIS_MS = new Date('2009-01-03').getTime();
+const BTC_RAINBOW_CACHE_KEY = CACHE_KEY_PREFIX + 'btc_rainbow';
+const BTC_RAINBOW_STALE_MS = 24 * 60 * 60 * 1000;
+
+async function fetchBtcFullHistory(){
+  const res = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=max&interval=daily');
+  const data = await res.json();
+  const prices = data.prices || [];
+  if (prices.length < 60) throw new Error('insufficient BTC history');
+  // downsample to roughly weekly points to keep the chart light
+  return prices.filter((p, i) => i % 7 === 0 || i === prices.length - 1);
+}
+
+function computeLogRegression(history){
+  const points = history.map(([ts, price]) => {
+    const days = (ts - BTC_GENESIS_MS) / 86400000;
+    if (days <= 0 || price <= 0) return null;
+    return { x: Math.log(days), y: Math.log(price) };
+  }).filter(Boolean);
+
+  const n = points.length;
+  const sumX = points.reduce((s, p) => s + p.x, 0);
+  const sumY = points.reduce((s, p) => s + p.y, 0);
+  const sumXY = points.reduce((s, p) => s + p.x * p.y, 0);
+  const sumXX = points.reduce((s, p) => s + p.x * p.x, 0);
+  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+
+  const residuals = points.map(p => p.y - (slope * p.x + intercept));
+  const meanR = residuals.reduce((s, r) => s + r, 0) / n;
+  const stdResidual = Math.sqrt(residuals.reduce((s, r) => s + Math.pow(r - meanR, 2), 0) / n);
+
+  return { slope, intercept, stdResidual };
+}
+
+async function loadBtcRainbowData(){
+  try{
+    const raw = localStorage.getItem(BTC_RAINBOW_CACHE_KEY);
+    if (raw){
+      const cached = JSON.parse(raw);
+      if (Date.now() - (cached.ts || 0) < BTC_RAINBOW_STALE_MS) return cached.data;
+    }
+  }catch(e){}
+
+  try{
+    const history = await fetchBtcFullHistory();
+    const regression = computeLogRegression(history);
+    const result = { history, regression };
+    try{ localStorage.setItem(BTC_RAINBOW_CACHE_KEY, JSON.stringify({ data: result, ts: Date.now() })); }catch(e){}
+    return result;
+  }catch(e){
+    console.warn('btc rainbow data failed:', e.message || e);
+    try{
+      const raw = localStorage.getItem(BTC_RAINBOW_CACHE_KEY);
+      if (raw) return JSON.parse(raw).data;
+    }catch(e2){}
+    return null;
+  }
+}
+
 async function loadMarketData(){
-  const [indices, crypto, krw, watchlist, macro, leverageEtfs, tsla, btcOnchain, upbitTop, activeAddr, stablecoin, funding, longShort, openInterest] = await Promise.all([
+  const [indices, crypto, krw, watchlist, macro, leverageEtfs, tsla, btcOnchain, upbitTop, activeAddr, stablecoin, funding, longShort, openInterest, btcRainbow] = await Promise.all([
     Promise.all(MARKET_INDEX_SYMBOLS.map(loadIndexData)),
     loadCryptoSection(),
     loadExchangeRate(),
@@ -1514,11 +1587,12 @@ async function loadMarketData(){
     loadStablecoinSupply(),
     loadFundingRate(),
     loadLongShortRatio(),
-    loadOpenInterest()
+    loadOpenInterest(),
+    loadBtcRainbowData()
   ]);
   const vix = await loadIndexData({ key:'vix', name:'VIX', yahoo:'^VIX', trackDrawdown:false });
   const kimchi = await loadKimchiPremium(krw);
-  const payload = { indices, vix, crypto, krw, watchlist, macro, leverageEtfs, tsla, btcOnchain, upbitTop, kimchi, activeAddr, stablecoin, funding, longShort, openInterest, ts: Date.now() };
+  const payload = { indices, vix, crypto, krw, watchlist, macro, leverageEtfs, tsla, btcOnchain, upbitTop, kimchi, activeAddr, stablecoin, funding, longShort, openInterest, btcRainbow, ts: Date.now() };
   try{ localStorage.setItem(MARKET_CACHE_KEY, JSON.stringify(payload)); }catch(e){}
   return payload;
 }
@@ -1613,6 +1687,86 @@ function longShortBarHtml(l){
       '<div class="ls-bar-short" style="width:' + shortPct.toFixed(1) + '%"></div>' +
     '</div>' +
     '<div class="ls-bar-labels"><span>롱 ' + longPct.toFixed(1) + '%</span><span>숏 ' + shortPct.toFixed(1) + '%</span></div>';
+}
+
+function bandPositionLabel(currentPrice, regression){
+  const days = (Date.now() - BTC_GENESIS_MS) / 86400000;
+  const center = regression.slope * Math.log(days) + regression.intercept;
+  const z = (Math.log(currentPrice) - center) / regression.stdResidual;
+  let label, tone;
+  if (z < -1.5){ label = '저평가 구간 (회귀선보다 크게 낮음)'; tone = 'up'; }
+  else if (z < -0.5){ label = '회귀선 아래쪽'; tone = 'up'; }
+  else if (z <= 0.5){ label = '회귀선 근접 (적정 구간)'; tone = 'neutral'; }
+  else if (z <= 1.5){ label = '회귀선 위쪽 (다소 고평가)'; tone = 'down'; }
+  else{ label = '고평가·과열 구간'; tone = 'down'; }
+  return { z, label, tone };
+}
+
+function renderBtcRainbowChart(history, regression, currentPrice){
+  const w = 320, h = 200, padL = 4, padR = 4, padT = 10, padB = 8;
+  const plotW = w - padL - padR, plotH = h - padT - padB;
+  const tsMin = history[0][0], tsMax = Date.now();
+
+  const bandK = [-2, -1, 0, 1, 2];
+  const bandColors = ['#3B82F6', '#3FA796', '#E8A33D', '#E4572E', '#E5484D'];
+
+  const allLog = [];
+  history.forEach(([ts]) => {
+    const days = Math.max(1, (ts - BTC_GENESIS_MS) / 86400000);
+    const center = regression.slope * Math.log(days) + regression.intercept;
+    bandK.forEach(k => allLog.push(center + k * regression.stdResidual));
+  });
+  history.forEach(([, price]) => { if (price > 0) allLog.push(Math.log(price)); });
+  allLog.push(Math.log(currentPrice));
+
+  const yMin = Math.min(...allLog), yMax = Math.max(...allLog);
+  const yRange = (yMax - yMin) || 1;
+
+  function xPos(ts){ return padL + ((ts - tsMin) / (tsMax - tsMin)) * plotW; }
+  function yPos(logP){ return padT + plotH - ((logP - yMin) / yRange) * plotH; }
+
+  const bandPaths = bandK.map((k, idx) => {
+    const pts = history.map(([ts]) => {
+      const days = Math.max(1, (ts - BTC_GENESIS_MS) / 86400000);
+      const center = regression.slope * Math.log(days) + regression.intercept;
+      const logP = center + k * regression.stdResidual;
+      return xPos(ts).toFixed(1) + ',' + yPos(logP).toFixed(1);
+    }).join(' ');
+    const isCenter = k === 0;
+    return '<polyline points="' + pts + '" fill="none" stroke="' + bandColors[idx] + '" stroke-width="' + (isCenter ? 1.8 : 1) + '"' +
+      (isCenter ? '' : ' stroke-dasharray="4,3"') + ' opacity="' + (isCenter ? 0.95 : 0.55) + '"/>';
+  }).join('');
+
+  const pricePts = history.map(([ts, price]) => price > 0 ? (xPos(ts).toFixed(1) + ',' + yPos(Math.log(price)).toFixed(1)) : null)
+    .filter(Boolean).join(' ');
+  const nowX = xPos(tsMax).toFixed(1), nowY = yPos(Math.log(currentPrice)).toFixed(1);
+
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" class="rainbow-chart" preserveAspectRatio="none">' +
+    bandPaths +
+    '<polyline points="' + pricePts + '" fill="none" stroke="#EDEEF2" stroke-width="2"/>' +
+    '<circle cx="' + nowX + '" cy="' + nowY + '" r="4" fill="#EDEEF2" stroke="#0F1B2E" stroke-width="1.5"/>' +
+  '</svg>';
+}
+
+function buildBtcRainbowSection(rainbowData, currentPrice){
+  if (!rainbowData || !currentPrice) return '';
+  const { history, regression } = rainbowData;
+  const pos = bandPositionLabel(currentPrice, regression);
+  const chart = renderBtcRainbowChart(history, regression, currentPrice);
+
+  return '<div class="market-section-title">비트코인 장기 추세 (로그 회귀)</div>' +
+    nuanceBoxTone(pos.label, pos.tone, '현재가 $' + Math.round(currentPrice).toLocaleString('en-US') + '가 2013년 이후 전체 가격 데이터에 로그-로그 회귀선을 맞췄을 때 어느 위치에 있는지를 보여줍니다.') +
+    '<div class="market-wide-card" style="display:block;">' +
+      chart +
+      '<div class="rainbow-legend">' +
+        '<span><i style="background:#3B82F6"></i>저평가</span>' +
+        '<span><i style="background:#3FA796"></i>적정</span>' +
+        '<span><i style="background:#E8A33D"></i>중립~다소 고평가</span>' +
+        '<span><i style="background:#E4572E"></i>고평가</span>' +
+        '<span><i style="background:#E5484D"></i>과열</span>' +
+      '</div>' +
+      '<div class="market-summary-note" style="margin-top:10px;">이 회귀선은 과거 가격을 수학적으로 맞춘 통계적 추세선이며, 미래 가격을 예측하거나 보장하지 않습니다. 흰색 선은 실제 가격, 점은 현재가입니다.</div>' +
+    '</div>';
 }
 
 function koreanFngLabel(label){
@@ -2152,6 +2306,7 @@ function renderMarket(data){
     (stablecoinHtml ? '<div class="market-section-title">유동성 지표</div>' + stablecoinHtml : '') +
     (upbitTopHtml ? '<div class="market-section-title">업비트 거래대금 상위</div>' + upbitTopHtml : '') +
     (leverageHtml ? '<div class="market-section-title">보유 레버리지 ETF vs 기초자산 (30일)</div>' + leverageHtml : '') +
+    buildBtcRainbowSection(data.btcRainbow, data.crypto && data.crypto.coins && data.crypto.coins.btc && data.crypto.coins.btc.price) +
     '<div class="market-section-title">관심종목</div>' +
     buildWatchlistInterpretation(data.watchlist) +
     '<div class="market-grid">' + watchlistCards + '</div>' +
