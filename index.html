@@ -1,0 +1,2741 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0F1B2E">
+<title>주요뉴스 30위 · 국내외 뉴스 우선순위</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#0F1B2E;
+    --bg-panel:#16233A;
+    --bg-card:#1B2A44;
+    --bg-card-hover:#20304E;
+    --text-primary:#EDEEF2;
+    --text-muted:#8B96A8;
+    --text-faint:#5C6B82;
+    --divider:#263349;
+    --accent-teal:#3FA796;
+    --accent-gold:#E8A33D;
+    --accent-coral:#E4572E;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--bg-deep);
+    color:var(--text-primary);
+    font-family:-apple-system, BlinkMacSystemFont, "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:48px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    padding:22px 20px 18px;
+    background:linear-gradient(180deg, #101d33 0%, var(--bg-deep) 100%);
+    border-bottom:1px solid var(--divider);
+  }
+  .masthead-row{
+    display:flex; align-items:baseline; justify-content:space-between;
+  }
+  .logotype{
+    font-family:"Noto Serif KR", serif;
+    font-weight:900;
+    font-size:21px;
+    letter-spacing:-0.5px;
+    background:linear-gradient(90deg, var(--accent-teal), var(--accent-gold) 55%, var(--accent-coral));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .datestamp{
+    font-family:"JetBrains Mono", monospace;
+    font-size:12px;
+    color:var(--text-muted);
+    text-align:right;
+    line-height:1.5;
+  }
+  .datestamp b{ color:var(--text-primary); font-weight:600; }
+
+  /* signature gauge */
+  .gauge-wrap{
+    margin-top:16px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .gauge-svg{ flex:0 0 auto; }
+  .gauge-copy{ flex:1; min-width:0; }
+  .gauge-label{
+    font-size:11px;
+    color:var(--text-faint);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    margin-bottom:4px;
+  }
+  .gauge-headline{
+    font-size:14px;
+    color:var(--text-primary);
+    line-height:1.4;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+  }
+  #needle{ transform-origin:60px 60px; transition:transform 0.9s cubic-bezier(.4,1.4,.4,1); }
+
+  .weather-widget{
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px solid var(--divider);
+  }
+  .weather-main{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .weather-icon{ font-size:30px; line-height:1; flex-shrink:0; }
+  .weather-body{ flex:1; min-width:0; }
+  .weather-loc{
+    font-size:11px;
+    color:var(--text-faint);
+    margin-bottom:2px;
+  }
+  .weather-temp{
+    font-family:"JetBrains Mono", monospace;
+    font-size:20px;
+    font-weight:700;
+    color:var(--text-primary);
+  }
+  .weather-desc{
+    font-size:12.5px;
+    color:var(--text-muted);
+  }
+  .weather-details{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 14px;
+    margin-top:10px;
+    font-size:11.5px;
+    color:var(--text-muted);
+  }
+  .weather-details b{ color:var(--text-primary); font-weight:600; }
+  .weather-error{ font-size:12px; color:var(--text-faint); padding:8px 0; }
+
+  /* ---------- Tabs ---------- */
+  .tabbar{
+    display:flex;
+    gap:8px;
+    padding:14px 20px 0;
+    position:sticky;
+    top:0;
+    background:var(--bg-deep);
+    z-index:5;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:10px 0;
+    border-radius:10px 10px 0 0;
+    font-size:14px;
+    font-weight:600;
+    color:var(--text-muted);
+    background:transparent;
+    border:none;
+    border-bottom:2px solid transparent;
+    cursor:pointer;
+  }
+  .tab.active{ color:var(--text-primary); }
+  .tab[data-tab="domestic"].active{ border-bottom-color:var(--accent-teal); }
+  .tab[data-tab="intl"].active{ border-bottom-color:var(--accent-coral); }
+  .tab[data-tab="market"].active{ border-bottom-color:var(--accent-gold); }
+  .tab[data-tab="finance"].active{ border-bottom-color:var(--accent-teal); }
+
+  .fin-subtabbar{
+    display:flex;
+    gap:8px;
+    padding:10px 20px 0;
+  }
+  .fin-subtab{
+    flex:1;
+    text-align:center;
+    padding:7px 0;
+    border-radius:20px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--text-muted);
+    background:var(--bg-panel);
+    border:1px solid var(--divider);
+    cursor:pointer;
+  }
+  .fin-subtab.active{
+    color:var(--text-primary);
+    border-color:var(--accent-gold);
+    background:rgba(232,163,61,0.12);
+  }
+
+  .toolbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 20px 0;
+    font-size:12px;
+    color:var(--text-faint);
+  }
+  .toggle{
+    display:flex; align-items:center; gap:6px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .toggle input{ accent-color:var(--accent-gold); }
+  .refresh-btn{
+    background:none; border:1px solid var(--divider); color:var(--text-muted);
+    border-radius:8px; padding:5px 10px; font-size:12px; cursor:pointer;
+  }
+  .refresh-btn:active{ background:var(--bg-panel); }
+
+  /* ---------- List ---------- */
+  .list{ padding:14px 16px 8px; }
+  .card{
+    display:flex;
+    gap:12px;
+    padding:14px 12px;
+    margin-bottom:8px;
+    background:var(--bg-card);
+    border-radius:12px;
+    border:1px solid var(--divider);
+    text-decoration:none;
+    color:inherit;
+  }
+  .card:active{ background:var(--bg-card-hover); }
+  .rank{
+    font-family:"JetBrains Mono", monospace;
+    font-size:13px;
+    font-weight:700;
+    color:var(--text-faint);
+    width:22px;
+    flex-shrink:0;
+    padding-top:1px;
+  }
+  .card:nth-child(1) .rank, .card:nth-child(2) .rank, .card:nth-child(3) .rank{
+    color:var(--accent-gold);
+  }
+  .card-body{ flex:1; min-width:0; }
+  .card-title{
+    font-size:15px;
+    font-weight:600;
+    line-height:1.45;
+    color:var(--text-primary);
+    margin-bottom:6px;
+  }
+  .card-meta{
+    font-size:11.5px;
+    color:var(--text-muted);
+    margin-bottom:8px;
+  }
+  .card-meta-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .card-meta-row .card-meta{ margin-bottom:0; flex:1; min-width:0; }
+  .translate-btn{
+    flex-shrink:0;
+    font-size:11px;
+    color:var(--accent-gold);
+    background:rgba(232,163,61,0.12);
+    border:1px solid rgba(232,163,61,0.35);
+    border-radius:20px;
+    padding:4px 10px;
+    cursor:pointer;
+  }
+  .translate-btn:active{ background:rgba(232,163,61,0.22); }
+  .card-original{
+    font-size:12px;
+    color:var(--text-faint);
+    line-height:1.4;
+    margin-bottom:8px;
+    font-style:italic;
+  }
+  .score-bar{
+    height:4px;
+    border-radius:2px;
+    background:var(--divider);
+    overflow:hidden;
+  }
+  .score-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--accent-teal), var(--accent-gold), var(--accent-coral));
+    background-size:220% 100%;
+  }
+
+  .state{
+    padding:40px 24px;
+    text-align:center;
+    color:var(--text-muted);
+    font-size:13px;
+    line-height:1.6;
+  }
+  .state b{ color:var(--text-primary); display:block; margin-bottom:6px; font-size:14px; }
+  .spinner{
+    width:22px; height:22px; margin:0 auto 14px;
+    border-radius:50%;
+    border:2px solid var(--divider);
+    border-top-color:var(--accent-gold);
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:var(--text-faint);
+    padding:18px 20px 24px;
+  }
+  .footer-copyright{
+    margin-top:8px;
+    font-size:10.5px;
+    line-height:1.6;
+    color:var(--text-faint);
+    opacity:0.8;
+  }
+
+  .hidden{ display:none !important; }
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(6,10,18,0.72);
+    z-index:50;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+  }
+  .modal-panel{
+    background:var(--bg-panel);
+    width:100%;
+    max-width:640px;
+    max-height:88vh;
+    overflow-y:auto;
+    border-radius:18px 18px 0 0;
+    padding:16px 20px 32px;
+    border-top:1px solid var(--divider);
+  }
+  .modal-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+    position:sticky;
+    top:0;
+    background:var(--bg-panel);
+    padding:4px 0 10px;
+  }
+  .modal-close{
+    background:none;
+    border:1px solid var(--divider);
+    color:var(--text-muted);
+    border-radius:8px;
+    padding:6px 14px;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .modal-original-link{
+    color:var(--accent-gold);
+    font-size:13px;
+    text-decoration:none;
+  }
+  .modal-title{
+    font-family:"Noto Serif KR", serif;
+    font-weight:700;
+    font-size:18px;
+    line-height:1.5;
+    margin-bottom:16px;
+    color:var(--text-primary);
+  }
+  .modal-body p{
+    font-size:14.5px;
+    line-height:1.85;
+    color:var(--text-primary);
+    margin:0 0 14px;
+  }
+  .modal-note{
+    font-size:12.5px;
+    color:var(--text-faint);
+    font-style:italic;
+    margin-bottom:16px;
+  }
+
+  /* ---------- Market tab ---------- */
+  :root{
+    --price-up:#E5484D;
+    --price-down:#3B82F6;
+  }
+  .market-view{ padding:14px 16px 8px; }
+  .market-section-title{
+    font-size:12px;
+    color:var(--text-faint);
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin:18px 4px 8px;
+  }
+  .market-section-title:first-child{ margin-top:4px; }
+  .market-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  .market-card{
+    background:var(--bg-card);
+    border:1px solid var(--divider);
+    border-radius:12px;
+    padding:12px;
+  }
+  .market-card-title{
+    font-size:12px;
+    color:var(--text-muted);
+    margin-bottom:4px;
+  }
+  .market-card-value{
+    font-family:"JetBrains Mono", monospace;
+    font-size:17px;
+    font-weight:700;
+    color:var(--text-primary);
+  }
+  .market-card-change{
+    font-family:"JetBrains Mono", monospace;
+    font-size:12.5px;
+    font-weight:600;
+    margin-top:2px;
+  }
+  .price-up{ color:var(--price-up); }
+  .price-down{ color:var(--price-down); }
+  .sparkline{ width:100%; height:28px; margin-top:8px; display:block; }
+  .trigger-badge{
+    display:inline-block;
+    margin-top:8px;
+    font-size:11px;
+    padding:3px 8px;
+    border-radius:20px;
+    background:rgba(232,163,61,0.14);
+    color:var(--accent-gold);
+    border:1px solid rgba(232,163,61,0.35);
+  }
+  .market-wide-card{
+    background:var(--bg-card);
+    border:1px solid var(--divider);
+    border-radius:12px;
+    padding:14px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:8px;
+  }
+  .mini-gauge{ width:64px; height:50px; flex-shrink:0; }
+  .market-wide-body{ flex:1; min-width:0; }
+  .market-wide-title{ font-size:12.5px; color:var(--text-muted); margin-bottom:2px; }
+  .market-wide-value{ font-family:"JetBrains Mono", monospace; font-size:16px; font-weight:700; color:var(--text-primary); }
+  .market-wide-note{ font-size:11.5px; color:var(--text-faint); margin-top:2px; }
+  .market-error{ font-size:12px; color:var(--text-faint); text-align:center; padding:10px; }
+  .market-card[data-chart-symbol]{ cursor:pointer; }
+  .market-hint{
+    text-align:center;
+    font-size:11px;
+    color:var(--text-faint);
+    margin-top:12px;
+  }
+  .kimchi-rows{ margin-top:8px; }
+  .mini-interpret{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:var(--bg-card);
+    border:1px solid var(--divider);
+    border-radius:10px;
+    padding:10px 12px;
+    margin-bottom:8px;
+  }
+  .mini-interpret p{
+    margin:0;
+    font-size:12.5px;
+    line-height:1.6;
+    color:var(--text-muted);
+    flex:1;
+  }
+  .nuance-badge{
+    flex-shrink:0;
+    font-size:11px;
+    font-weight:600;
+    padding:3px 9px;
+    border-radius:20px;
+    border:1px solid var(--divider);
+    color:var(--text-muted);
+    white-space:nowrap;
+  }
+  .nuance-badge.up{ color:var(--price-up); border-color:var(--price-up); background:rgba(229,72,77,0.08); }
+  .nuance-badge.down{ color:var(--price-down); border-color:var(--price-down); background:rgba(59,130,246,0.08); }
+
+  .signal-card{
+    background:var(--bg-card);
+    border:1px solid var(--divider);
+    border-left:4px solid var(--accent-gold);
+    border-radius:10px;
+    padding:14px;
+    margin-bottom:8px;
+  }
+  .signal-card-title{
+    font-size:12.5px;
+    color:var(--text-muted);
+    margin-bottom:6px;
+  }
+  .signal-card-value{
+    font-family:"JetBrains Mono", monospace;
+    font-size:22px;
+    font-weight:700;
+    color:var(--text-primary);
+    margin-bottom:4px;
+  }
+  .signal-card-change{
+    font-family:"JetBrains Mono", monospace;
+    font-size:12px;
+    margin-bottom:8px;
+    color:var(--text-muted);
+  }
+  .signal-card-note{
+    font-size:11.5px;
+    color:var(--text-faint);
+    margin-top:8px;
+  }
+
+  /* Fear & Greed gradient bar */
+  .fng-bar-wrap{ margin-top:6px; }
+  .fng-bar{
+    position:relative;
+    height:10px;
+    border-radius:6px;
+    background:linear-gradient(90deg, #E5484D, #E8A33D 50%, #3FA796);
+    margin-bottom:6px;
+  }
+  .fng-pointer{
+    position:absolute;
+    top:-4px;
+    width:4px;
+    height:18px;
+    background:#EDEEF2;
+    border-radius:2px;
+    transform:translateX(-50%);
+    box-shadow:0 0 4px rgba(0,0,0,0.6);
+  }
+  .fng-bar-labels{
+    display:flex;
+    justify-content:space-between;
+    font-size:10px;
+    color:var(--text-faint);
+  }
+  .fng-note{
+    margin-top:10px;
+    font-size:11.5px;
+    color:var(--accent-gold);
+    background:rgba(232,163,61,0.10);
+    border:1px solid rgba(232,163,61,0.3);
+    border-radius:8px;
+    padding:8px 10px;
+    line-height:1.5;
+  }
+
+  /* Donut chart (BTC dominance) */
+  .donut-card{ align-items:flex-start; }
+  .donut-chart-wrap{ position:relative; flex-shrink:0; }
+  .donut-center{
+    position:absolute;
+    top:0; left:0; right:0; bottom:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+  .donut-center-value{ font-family:"JetBrains Mono", monospace; font-size:20px; font-weight:700; color:var(--text-primary); }
+  .donut-center-label{ font-size:10px; color:var(--text-faint); margin-top:2px; }
+  .donut-legend{ flex:1; min-width:0; padding-top:4px; }
+  .donut-legend-row{
+    display:flex; align-items:center; gap:8px;
+    font-size:12px; color:var(--text-muted);
+    padding:3px 0;
+  }
+  .donut-legend-row b{ color:var(--text-primary); font-weight:600; margin-left:auto; }
+  .donut-dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+
+  /* Stablecoin supply bars */
+  .stable-bars{ margin-top:10px; }
+  .stable-row{ margin-bottom:10px; }
+  .stable-row:last-child{ margin-bottom:0; }
+  .stable-row-head{
+    display:flex; justify-content:space-between;
+    font-size:12px; color:var(--text-muted); margin-bottom:4px;
+  }
+  .stable-bar-track{ height:8px; border-radius:4px; background:var(--divider); overflow:hidden; }
+  .stable-bar-fill{ height:100%; border-radius:4px; }
+
+  /* Long/short ratio bar */
+  .ls-bar-track{
+    display:flex; height:10px; border-radius:6px; overflow:hidden; margin-top:8px;
+  }
+  .ls-bar-long{ background:var(--price-up); }
+  .ls-bar-short{ background:var(--price-down); }
+  .ls-bar-labels{
+    display:flex; justify-content:space-between;
+    font-size:11px; color:var(--text-muted); margin-top:4px;
+  }
+
+  .kimchi-row{
+    display:flex;
+    justify-content:space-between;
+    font-family:"JetBrains Mono", monospace;
+    font-size:13px;
+    padding:4px 0;
+  }
+  .upbit-rows{ margin-top:8px; }
+  .upbit-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:12.5px;
+    padding:5px 0;
+    border-bottom:1px solid var(--divider);
+  }
+  .upbit-row:last-child{ border-bottom:none; }
+  .upbit-rank{
+    width:16px;
+    font-family:"JetBrains Mono", monospace;
+    color:var(--text-faint);
+    flex-shrink:0;
+  }
+  .upbit-name{ flex:1; min-width:0; color:var(--text-primary); }
+
+  .chart-period-switcher{ display:flex; gap:6px; }
+  .chart-period-btn{
+    font-size:11.5px;
+    padding:5px 10px;
+    border-radius:20px;
+    background:var(--bg-panel);
+    border:1px solid var(--divider);
+    color:var(--text-muted);
+    cursor:pointer;
+  }
+  .chart-period-btn.active{
+    color:var(--text-primary);
+    border-color:var(--accent-gold);
+    background:rgba(232,163,61,0.12);
+  }
+  .chart-title{
+    font-family:"Noto Serif KR", serif;
+    font-weight:700;
+    font-size:16px;
+    color:var(--text-primary);
+    margin-bottom:12px;
+  }
+  .chart-container{ position:relative; min-height:220px; }
+  .interactive-chart{ width:100%; height:180px; display:block; touch-action:none; }
+  .chart-tooltip{
+    position:absolute;
+    top:0;
+    transform:translateX(-50%);
+    font-family:"JetBrains Mono", monospace;
+    font-size:11px;
+    color:var(--text-primary);
+    background:var(--bg-card);
+    border:1px solid var(--divider);
+    border-radius:6px;
+    padding:3px 8px;
+    white-space:nowrap;
+    pointer-events:none;
+  }
+  .chart-range-labels{
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+    color:var(--text-faint);
+    margin-top:6px;
+  }
+  .market-summary{
+    background:var(--bg-card);
+    border:1px solid var(--divider);
+    border-radius:12px;
+    padding:14px;
+    margin-bottom:6px;
+  }
+  .market-summary-title{
+    font-family:"Noto Serif KR", serif;
+    font-weight:700;
+    font-size:14px;
+    margin-bottom:8px;
+    color:var(--text-primary);
+  }
+  .market-summary p{
+    font-size:13.5px;
+    line-height:1.75;
+    color:var(--text-primary);
+    margin:0;
+  }
+  .market-summary-note{
+    font-size:11px;
+    color:var(--text-faint);
+    font-style:italic;
+    margin-bottom:16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-row">
+    <div class="logotype">주요뉴스 30위</div>
+    <div class="datestamp" id="datestamp"></div>
+  </div>
+  <div class="gauge-wrap">
+    <svg class="gauge-svg" width="60" height="46" viewBox="0 0 120 92">
+      <path d="M 12 78 A 48 48 0 1 1 108 78" fill="none" stroke="#263349" stroke-width="10" stroke-linecap="round"/>
+      <path id="gauge-fill" d="M 12 78 A 48 48 0 1 1 108 78" fill="none" stroke="url(#gaugeGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="207" stroke-dashoffset="207"/>
+      <defs>
+        <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#3FA796"/>
+          <stop offset="55%" stop-color="#E8A33D"/>
+          <stop offset="100%" stop-color="#E4572E"/>
+        </linearGradient>
+      </defs>
+      <line id="needle" x1="60" y1="78" x2="60" y2="34" stroke="#EDEEF2" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="60" cy="78" r="4" fill="#EDEEF2"/>
+    </svg>
+    <div class="gauge-copy">
+      <div class="gauge-label" id="gauge-label">오늘의 종합 이슈 지수</div>
+      <div class="gauge-headline" id="gauge-headline">불러오는 중...</div>
+    </div>
+  </div>
+  <div class="weather-widget" id="weatherWidget">
+    <div class="state" style="padding:12px 0;"><div class="spinner"></div>날씨를 확인하는 중...</div>
+  </div>
+</div>
+
+<div class="tabbar">
+  <button class="tab active" data-tab="domestic">국내</button>
+  <button class="tab" data-tab="intl">국외</button>
+  <button class="tab" data-tab="market">증시</button>
+  <button class="tab" data-tab="finance">금융</button>
+</div>
+
+<div class="fin-subtabbar hidden" id="financeSubtabs">
+  <button class="fin-subtab active" data-fintab="finDomestic">국내금융</button>
+  <button class="fin-subtab" data-fintab="finIntl">해외금융</button>
+  <button class="fin-subtab" data-fintab="crypto">암호화폐</button>
+</div>
+
+<div class="toolbar" id="newsToolbar">
+  <label class="toggle">
+    <input type="checkbox" id="weightToggle" checked>
+    관심 가중치 반영
+  </label>
+  <button class="refresh-btn" id="refreshBtn">새로고침</button>
+</div>
+
+<div class="list" id="list">
+  <div class="state"><div class="spinner"></div><b>뉴스를 모으는 중입니다</b>여러 매체의 기사를 비교해 중요도를 계산하고 있어요.</div>
+</div>
+
+<div class="market-view hidden" id="marketView">
+  <div class="state"><div class="spinner"></div><b>시장 데이터를 불러오는 중입니다</b>지수·환율·암호화폐 시세를 모으고 있어요.</div>
+</div>
+
+<footer>
+  <div id="lastUpdated"></div>
+  <div class="footer-copyright">
+    각 기사의 저작권은 해당 언론사(연합뉴스·한겨레·경향신문·조선일보·동아일보·BBC·NYT·The Guardian·Al Jazeera·NPR·한국경제·서울경제·CNBC·MarketWatch 등)에 있으며,<br>
+    본 앱은 제목·요약과 원문 링크만 제공합니다. 전체 기사는 각 언론사 원문에서 확인해 주세요.<br>
+    © 2026 주요뉴스 30위 · 개인적 용도로 제작됨
+  </div>
+</footer>
+
+<div class="modal-overlay hidden" id="articleModal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <button class="modal-close" id="modalClose">닫기</button>
+      <a class="modal-original-link" id="modalOriginal" target="_blank" rel="noopener">원문 보기 ↗</a>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="chartModal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <button class="modal-close" id="chartModalClose">닫기</button>
+      <div class="chart-period-switcher" id="chartPeriodSwitcher">
+        <button class="chart-period-btn" data-period="7d">1주</button>
+        <button class="chart-period-btn active" data-period="1mo">1개월</button>
+        <button class="chart-period-btn" data-period="3mo">3개월</button>
+        <button class="chart-period-btn" data-period="1y">1년</button>
+      </div>
+    </div>
+    <div class="chart-title" id="chartTitle"></div>
+    <div class="chart-container" id="chartContainer"></div>
+  </div>
+</div>
+
+<script>
+/* ---------------- Config ---------------- */
+const FEEDS = {
+  domestic: [
+    { name:'연합뉴스', url:'https://www.yna.co.kr/rss/news.xml' },
+    { name:'한겨레', url:'http://www.hani.co.kr/rss/' },
+    { name:'경향신문', url:'http://www.khan.co.kr/rss/rssdata/total_news.xml' },
+    { name:'조선일보', url:'http://www.chosun.com/site/data/rss/rss.xml' },
+    { name:'동아일보', url:'http://rss.donga.com/total.xml' }
+  ],
+  intl: [
+    { name:'BBC World', url:'http://feeds.bbci.co.uk/news/world/rss.xml' },
+    { name:'NYT World', url:'https://rss.nytimes.com/services/xml/rss/nyt/World.xml' },
+    { name:'The Guardian', url:'https://www.theguardian.com/world/rss' },
+    { name:'Al Jazeera', url:'https://www.aljazeera.com/xml/rss/all.xml' },
+    { name:'NPR World', url:'https://feeds.npr.org/1004/rss.xml' }
+  ],
+  finDomestic: [
+    { name:'한국경제(경제)', url:'https://www.hankyung.com/feed/economy' },
+    { name:'한국경제(증권)', url:'https://www.hankyung.com/feed/finance' },
+    { name:'서울경제(경제)', url:'https://www.sedaily.com/rss/economy' },
+    { name:'서울경제(증권)', url:'https://www.sedaily.com/rss/finance' }
+  ],
+  finIntl: [
+    { name:'CNBC Business', url:'https://www.cnbc.com/id/10001147/device/rss/rss.html' },
+    { name:'CNBC Markets', url:'https://www.cnbc.com/id/10000664/device/rss/rss.html' },
+    { name:'CNBC Economy', url:'https://www.cnbc.com/id/15839135/device/rss/rss.html' },
+    { name:'MarketWatch', url:'http://feeds.marketwatch.com/marketwatch/topstories/' }
+  ],
+  crypto: [
+    { name:'CoinDesk', url:'https://www.coindesk.com/arc/outboundfeeds/rss/' },
+    { name:'Cointelegraph', url:'https://cointelegraph.com/rss' },
+    { name:'crypto.news', url:'https://crypto.news/feed' },
+    { name:'Decrypt', url:'https://decrypt.co/feed' }
+  ]
+};
+
+const INTEREST_KEYWORDS = {
+  domestic: ['교육','특수교육','시각장애','장애인','맹학교','기독교','교회','신앙','예배','목회',
+             '투자','증시','코스피','코스닥','나스닥','금리','환율','비트코인','이더리움','암호화폐','가상자산'],
+  intl: ['education','disability','disabilities','blind','visually impaired','church','faith','christian',
+         'investment','stock market','nasdaq','s&p','bitcoin','ethereum','crypto','interest rate','federal reserve','fed '],
+  finDomestic: ['금리','환율','코스피','코스닥','나스닥','S&P','반도체','실적','수출','물가','부동산','비트코인','이더리움','암호화폐'],
+  finIntl: ['interest rate','federal reserve','fed ','inflation','earnings','nasdaq','s&p','dollar','recession','bitcoin','ethereum','crypto'],
+  crypto: ['bitcoin','ethereum','xrp','ripple','solana','dogecoin','etf','sec','regulation','defi','stablecoin','halving']
+};
+
+// finDomestic behaves like domestic (Korean clustering, no translation),
+// finIntl/crypto behave like intl (English clustering, translate-on-demand).
+function isKoTab(tab){ return tab === 'domestic' || tab === 'finDomestic'; }
+function isIntlTab(tab){ return tab === 'intl' || tab === 'finIntl' || tab === 'crypto'; }
+function isFinanceTab(tab){ return tab === 'finDomestic' || tab === 'finIntl' || tab === 'crypto'; }
+
+
+const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
+const RSS2JSON_API_KEY = '2v0cwdedibrbnog3phzpfexyzehe3nkryy3jnmkk'; // rss2json.com 발급 키 적용 완료
+const CACHE_KEY_PREFIX = 'dawnbriefing_cache_';
+const TRANSLATION_CACHE_KEY = 'dawnbriefing_translations';
+const STALE_MS = 5 * 60 * 1000; // 5분 이내 캐시는 재수집 없이 그대로 사용
+const TOP_N = 30;
+
+const translationCache = new Map();
+try{
+  const rawT = localStorage.getItem(TRANSLATION_CACHE_KEY);
+  if (rawT){
+    const obj = JSON.parse(rawT);
+    Object.keys(obj).forEach(k => translationCache.set(k, obj[k]));
+  }
+}catch(e){}
+
+function persistTranslationCache(){
+  try{
+    const entries = Array.from(translationCache.entries()).slice(-500);
+    const obj = {};
+    entries.forEach(([k, v]) => { obj[k] = v; });
+    localStorage.setItem(TRANSLATION_CACHE_KEY, JSON.stringify(obj));
+  }catch(e){}
+}
+
+async function translateToKorean(text){
+  if (!text) return text;
+  if (translationCache.has(text)) return translationCache.get(text);
+  try{
+    const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=' + encodeURIComponent(text);
+    const res = await fetch(url);
+    const data = await res.json();
+    const translated = (data[0] || []).map(seg => seg[0]).join('');
+    const result = translated || text;
+    translationCache.set(text, result);
+    return result;
+  }catch(e){
+    console.warn('translation failed:', e.message || e);
+    translationCache.set(text, text);
+    return text;
+  }
+}
+
+async function translateItems(items, concurrency = 6){
+  const queue = items.slice();
+  const workers = new Array(Math.min(concurrency, queue.length)).fill(null).map(async () => {
+    while (queue.length){
+      const it = queue.shift();
+      it.translatedTitle = await translateToKorean(it.title);
+    }
+  });
+  await Promise.all(workers);
+  persistTranslationCache();
+}
+
+function chunkText(text, maxLen = 1800){
+  const paras = text.split('\n').filter(Boolean);
+  const chunks = [];
+  let cur = '';
+  for (const p of paras){
+    if (cur && (cur.length + p.length + 1) > maxLen){
+      chunks.push(cur);
+      cur = p;
+    }else{
+      cur = cur ? cur + '\n' + p : p;
+    }
+  }
+  if (cur) chunks.push(cur);
+  return chunks;
+}
+
+async function translateLongText(text){
+  const chunks = chunkText(text);
+  const translated = [];
+  for (const chunk of chunks){
+    translated.push(await translateToKorean(chunk));
+  }
+  return translated.join('\n\n');
+}
+
+async function fetchArticleTextViaProxy(url, proxyUrl){
+  const res = await fetch(proxyUrl);
+  if (!res.ok) throw new Error('article proxy http=' + res.status);
+  const html = await res.text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('script,style,nav,footer,aside,header,noscript').forEach(n => n.remove());
+  let paras = Array.from(doc.querySelectorAll('article p'));
+  if (paras.length < 3) paras = Array.from(doc.querySelectorAll('p'));
+  const text = paras.map(p => p.textContent.replace(/\s+/g, ' ').trim())
+    .filter(t => t.length > 40)
+    .slice(0, 25)
+    .join('\n');
+  if (!text) throw new Error('no article paragraphs extracted');
+  return text;
+}
+
+async function fetchArticleText(url){
+  const proxies = [
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+    'https://corsproxy.io/?url=' + encodeURIComponent(url)
+  ];
+  let lastErr;
+  for (const proxyUrl of proxies){
+    try{
+      return await fetchArticleTextViaProxy(url, proxyUrl);
+    }catch(e){
+      lastErr = e;
+      console.warn('article fetch failed via', proxyUrl, e.message || e);
+    }
+  }
+  throw lastErr || new Error('all article proxies failed');
+}
+
+let state = { domestic: null, intl: null, market: null, finDomestic: null, finIntl: null, crypto: null };
+let currentTab = 'domestic';
+
+/* ---------------- Utilities ---------------- */
+function stripHtml(html){
+  const t = document.createElement('div');
+  t.innerHTML = html || '';
+  return (t.textContent || t.innerText || '').trim();
+}
+
+function timeAgo(dateStr){
+  const d = new Date(dateStr);
+  if (isNaN(d)) return '';
+  const diffMin = Math.round((Date.now() - d.getTime()) / 60000);
+  if (diffMin < 1) return '방금 전';
+  if (diffMin < 60) return diffMin + '분 전';
+  const diffHr = Math.round(diffMin / 60);
+  if (diffHr < 24) return diffHr + '시간 전';
+  return Math.round(diffHr / 24) + '일 전';
+}
+
+function koBigrams(str){
+  const s = (str || '').replace(/[^\p{L}\p{N}]/gu, '');
+  const grams = new Set();
+  for (let i = 0; i < s.length - 1; i++) grams.add(s.slice(i, i + 2));
+  return grams;
+}
+
+const STOPWORDS = new Set(['the','a','an','of','to','in','on','for','and','is','are','at','by','with','as','after','over','amid','says','say']);
+function enTokens(str){
+  const words = (str || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length > 2 && !STOPWORDS.has(w));
+  return new Set(words);
+}
+
+function jaccard(a, b){
+  if (a.size === 0 || b.size === 0) return 0;
+  let inter = 0;
+  for (const x of a) if (b.has(x)) inter++;
+  const union = a.size + b.size - inter;
+  return union === 0 ? 0 : inter / union;
+}
+
+/* ---------------- Fetch ---------------- */
+async function fetchViaRss2Json(feed){
+  let url = RSS2JSON + encodeURIComponent(feed.url) + '&count=25';
+  if (RSS2JSON_API_KEY) url += '&api_key=' + encodeURIComponent(RSS2JSON_API_KEY);
+  const res = await fetch(url);
+  const data = await res.json().catch(() => ({}));
+  if (data.status !== 'ok' || !Array.isArray(data.items) || !data.items.length){
+    throw new Error('rss2json http=' + res.status + ' msg=' + (data.message || 'no items'));
+  }
+  return data.items.map(it => ({
+    title: stripHtml(it.title),
+    link: it.link,
+    source: feed.name,
+    pubDate: it.pubDate,
+    description: stripHtml(it.description).slice(0, 160)
+  }));
+}
+
+async function fetchViaXmlProxy(feed, proxyUrl){
+  const res = await fetch(proxyUrl);
+  if (!res.ok) throw new Error('proxy http=' + res.status);
+  const text = await res.text();
+  const doc = new DOMParser().parseFromString(text, 'text/xml');
+  if (doc.querySelector('parsererror')) throw new Error('XML parse error');
+  const nodes = Array.from(doc.querySelectorAll('item'));
+  if (!nodes.length) throw new Error('no items in feed XML');
+  return nodes.slice(0, 25).map(node => ({
+    title: stripHtml(node.querySelector('title')?.textContent || ''),
+    link: (node.querySelector('link')?.textContent || '').trim(),
+    source: feed.name,
+    pubDate: node.querySelector('pubDate')?.textContent || '',
+    description: stripHtml(node.querySelector('description')?.textContent || '').slice(0, 160)
+  }));
+}
+
+async function fetchFeed(feed){
+  const attempts = [
+    { label: 'rss2json', run: () => fetchViaRss2Json(feed) },
+    { label: 'allorigins', run: () => fetchViaXmlProxy(feed, 'https://api.allorigins.win/raw?url=' + encodeURIComponent(feed.url)) },
+    { label: 'corsproxy.io', run: () => fetchViaXmlProxy(feed, 'https://corsproxy.io/?url=' + encodeURIComponent(feed.url)) }
+  ];
+  for (const attempt of attempts){
+    try{
+      return await attempt.run();
+    }catch(e){
+      console.warn('[' + feed.name + '] ' + attempt.label + ' failed:', e.message || e);
+    }
+  }
+  console.error('[' + feed.name + '] all routes failed');
+  return [];
+}
+
+async function loadTab(tab){
+  const results = await Promise.all(FEEDS[tab].map(fetchFeed));
+  const items = results.flat().filter(it => it.title);
+  if (items.length === 0) return null;
+  try{ localStorage.setItem(CACHE_KEY_PREFIX + tab, JSON.stringify({ items, ts: Date.now() })); }catch(e){}
+  return items;
+}
+
+function loadCache(tab){
+  try{
+    const raw = localStorage.getItem(CACHE_KEY_PREFIX + tab);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+
+/* ---------------- Scoring ---------------- */
+function scoreItems(items, tab, useWeights){
+  const isKo = isKoTab(tab);
+  const simFn = isKo ? koBigrams : enTokens;
+  const threshold = isKo ? 0.32 : 0.28;
+  const sigs = items.map(it => simFn(it.title));
+
+  // union-find style clustering
+  const clusterOf = new Array(items.length).fill(-1);
+  const clusters = [];
+  for (let i = 0; i < items.length; i++){
+    if (clusterOf[i] !== -1) continue;
+    const members = [i];
+    clusterOf[i] = clusters.length;
+    for (let j = i + 1; j < items.length; j++){
+      if (clusterOf[j] !== -1) continue;
+      if (jaccard(sigs[i], sigs[j]) >= threshold){
+        clusterOf[j] = clusterOf[i];
+        members.push(j);
+      }
+    }
+    clusters.push(members);
+  }
+
+  const keywords = INTEREST_KEYWORDS[tab];
+  const now = Date.now();
+
+  const scored = items.map((it, idx) => {
+    const cluster = clusters[clusterOf[idx]];
+    const sourceCount = new Set(cluster.map(m => items[m].source)).size;
+    const clusterScore = Math.min(sourceCount / FEEDS[tab].length, 1);
+
+    let kwHits = 0;
+    const hay = (it.title + ' ' + it.description).toLowerCase();
+    for (const kw of keywords){ if (hay.includes(kw.toLowerCase())) kwHits++; }
+    const kwScore = Math.min(kwHits / 3, 1);
+
+    const d = new Date(it.pubDate);
+    const ageHr = isNaN(d) ? 12 : Math.max(0, (now - d.getTime()) / 3600000);
+    const recencyScore = Math.max(0, 1 - ageHr / 24);
+
+    const weighted = useWeights
+      ? clusterScore * 0.55 + kwScore * 0.30 + recencyScore * 0.15
+      : clusterScore * 0.75 + recencyScore * 0.25;
+
+    return { ...it, score: weighted, sourceCount };
+  });
+
+  // one entry per cluster: keep whichever member scored highest
+  const finalList = clusters.map(members => {
+    return members.reduce((best, m) => (scored[m].score > best.score ? scored[m] : best), scored[members[0]]);
+  });
+
+  finalList.sort((a, b) => b.score - a.score);
+  return finalList;
+}
+
+/* ---------------- Market ---------------- */
+const MARKET_INDEX_SYMBOLS = [
+  { key:'kospi', name:'코스피', yahoo:'^KS11', trackDrawdown:true },
+  { key:'kosdaq', name:'코스닥', yahoo:'^KQ11', trackDrawdown:false },
+  { key:'sp500', name:'S&P 500', yahoo:'^GSPC', trackDrawdown:true },
+  { key:'nasdaq', name:'나스닥', yahoo:'^IXIC', trackDrawdown:false }
+];
+
+const WATCHLIST_SYMBOLS = [
+  { key:'samsung', name:'삼성전자', yahoo:'005930.KS', unit:'krw' },
+  { key:'skhynix', name:'SK하이닉스', yahoo:'000660.KS', unit:'krw' },
+  { key:'tigersp500', name:'TIGER 미국S&P500', yahoo:'360750.KS', unit:'krw' },
+  { key:'tigernasdaq', name:'TIGER 미국나스닥100', yahoo:'133690.KS', unit:'krw' },
+  { key:'kodex200', name:'KODEX 200', yahoo:'069500.KS', unit:'krw' },
+  { key:'acegold', name:'ACE KRX금현물', yahoo:'411060.KS', unit:'krw' },
+  { key:'kodexust10y', name:'KODEX 미국채10년선물', yahoo:'308620.KS', unit:'krw' },
+  { key:'kodexshort', name:'KODEX 단기채권PLUS', yahoo:'214980.KS', unit:'krw' },
+  { key:'kodexdiv', name:'KODEX 고배당', yahoo:'279530.KS', unit:'krw' },
+  { key:'tigerusdiv', name:'TIGER 미국배당다우존스', yahoo:'458730.KS', unit:'krw' },
+  { key:'kodexvalueup', name:'KODEX 코리아밸류업', yahoo:'495850.KS', unit:'krw' },
+  { key:'kodexsemi', name:'KODEX 반도체', yahoo:'091160.KS', unit:'krw' },
+  { key:'kodexship', name:'KODEX 조선TOP10', yahoo:'0115D0.KS', unit:'krw' },
+  { key:'kodexdefense', name:'KODEX 방산TOP10', yahoo:'0080G0.KS', unit:'krw' }
+];
+
+const MACRO_SYMBOLS = [
+  { key:'gold', name:'금 현물(선물)', yahoo:'GC=F', unit:'usd' },
+  { key:'ust10y', name:'미국 10년물 국채금리', yahoo:'^TNX', unit:'pct', divideBy10:true },
+  { key:'wti', name:'WTI 유가', yahoo:'CL=F', unit:'usd' }
+];
+
+const LEVERAGE_ETF_PAIRS = [
+  { etfName:'XXRP', etfYahoo:'XXRP', underlyingKey:'xrp', underlyingLabel:'XRP', multiplier:2 },
+  { etfName:'ETHU', etfYahoo:'ETHU', underlyingKey:'eth', underlyingLabel:'ETH', multiplier:2 },
+  { etfName:'BITX', etfYahoo:'BITX', underlyingKey:'btc', underlyingLabel:'BTC', multiplier:2 },
+  { etfName:'SOLT', etfYahoo:'SOLT', underlyingKey:'sol', underlyingLabel:'SOL', multiplier:2 },
+  { etfName:'TSLL', etfYahoo:'TSLL', underlyingKey:'tsla', underlyingLabel:'TSLA', multiplier:1.5 }
+];
+
+const MARKET_CACHE_KEY = CACHE_KEY_PREFIX + 'market';
+const MARKET_STALE_MS = 5 * 60 * 1000;
+
+async function fetchYahooChart(symbol, range, interval){
+  const target = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(symbol) + '?range=' + range + '&interval=' + interval;
+  const proxies = [
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(target),
+    'https://corsproxy.io/?url=' + encodeURIComponent(target)
+  ];
+  let lastErr;
+  for (const proxyUrl of proxies){
+    try{
+      const res = await fetch(proxyUrl);
+      if (!res.ok) throw new Error('http=' + res.status);
+      const text = await res.text();
+      const data = JSON.parse(text);
+      const result = data && data.chart && data.chart.result && data.chart.result[0];
+      if (!result) throw new Error('no chart result');
+      return result;
+    }catch(e){
+      lastErr = e;
+      console.warn('[market:' + symbol + '] yahoo chart failed via', proxyUrl, e.message || e);
+    }
+  }
+  throw lastErr || new Error('yahoo chart unavailable');
+}
+
+function drawdownStage(pctFromAth){
+  if (pctFromAth == null) return null;
+  const d = Math.abs(pctFromAth);
+  if (d < 15) return '1단계 · 방어자산 구간 (드로다운 ' + d.toFixed(1) + '%)';
+  if (d < 25) return '2단계 · 광범위지수 매수 구간 (드로다운 ' + d.toFixed(1) + '%)';
+  if (d < 35) return '3단계 · 핵심 매수 구간 (드로다운 ' + d.toFixed(1) + '%)';
+  if (d < 45) return '4단계 · 레버리지 소액 구간 (드로다운 ' + d.toFixed(1) + '%)';
+  return '5단계 · 마지막 매수 구간 (드로다운 ' + d.toFixed(1) + '%)';
+}
+
+async function loadIndexData(sym){
+  try{
+    const recent = await fetchYahooChart(sym.yahoo, '3mo', '1d');
+    const quote = recent.indicators && recent.indicators.quote && recent.indicators.quote[0];
+    let closes = ((quote && quote.close) || []).filter(v => v != null);
+    const meta = recent.meta || {};
+    let current = meta.regularMarketPrice != null ? meta.regularMarketPrice : closes[closes.length - 1];
+    let prevClose = meta.chartPreviousClose != null ? meta.chartPreviousClose : (closes[closes.length - 2] != null ? closes[closes.length - 2] : current);
+    const changePct = prevClose ? ((current - prevClose) / prevClose * 100) : 0;
+
+    if (sym.divideBy10){
+      current = current / 10;
+      closes = closes.map(v => v / 10);
+    }
+
+    let athDrawdownPct = null;
+    if (sym.trackDrawdown){
+      try{
+        const long = await fetchYahooChart(sym.yahoo, '10y', '1mo');
+        const lq = long.indicators && long.indicators.quote && long.indicators.quote[0];
+        const longCloses = ((lq && lq.close) || []).filter(v => v != null);
+        const ath = Math.max(current, ...longCloses);
+        athDrawdownPct = ath ? ((current - ath) / ath * 100) : null;
+      }catch(e){
+        console.warn('[market:' + sym.key + '] ATH history failed:', e.message || e);
+      }
+    }
+
+    return { key: sym.key, name: sym.name, current, changePct, sparkline: closes.slice(-30), athDrawdownPct, unit: sym.unit || 'index', yahoo: sym.yahoo, divideBy10: !!sym.divideBy10 };
+  }catch(e){
+    console.warn('[market:' + sym.key + '] index load failed:', e.message || e);
+    return { key: sym.key, name: sym.name, error: true, unit: sym.unit || 'index', yahoo: sym.yahoo, divideBy10: !!sym.divideBy10 };
+  }
+}
+
+async function fetchCoinGeckoSpark(id){
+  try{
+    const res = await fetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=30&interval=daily');
+    const data = await res.json();
+    return (data.prices || []).map(p => p[1]);
+  }catch(e){
+    console.warn('coingecko sparkline failed for', id, e.message || e);
+    return [];
+  }
+}
+
+const CRYPTO_COINS = [
+  { id:'bitcoin', key:'btc', label:'BTC' },
+  { id:'ethereum', key:'eth', label:'ETH' },
+  { id:'ripple', key:'xrp', label:'XRP' },
+  { id:'solana', key:'sol', label:'SOL' },
+  { id:'dogecoin', key:'doge', label:'DOGE' }
+];
+
+async function loadCryptoSection(){
+  try{
+    const ids = CRYPTO_COINS.map(c => c.id).join(',');
+    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true');
+    const priceData = await res.json();
+
+    const sparks = await Promise.all(CRYPTO_COINS.map(c => fetchCoinGeckoSpark(c.id)));
+    const coins = {};
+    CRYPTO_COINS.forEach((c, i) => {
+      const p = priceData[c.id] || {};
+      coins[c.key] = { label: c.label, price: p.usd, changePct: p.usd_24h_change, sparkline: sparks[i] };
+    });
+
+    const ethBtcRatio = (coins.eth.price && coins.btc.price) ? (coins.eth.price / coins.btc.price) : null;
+
+    let fng = null;
+    try{
+      const fngRes = await fetch('https://api.alternative.me/fng/?limit=1');
+      const fngData = await fngRes.json();
+      const d0 = fngData && fngData.data && fngData.data[0];
+      if (d0) fng = { value: Number(d0.value), label: d0.value_classification };
+    }catch(e){
+      console.warn('fear&greed fetch failed:', e.message || e);
+    }
+
+    let globalStats = null;
+    try{
+      const gRes = await fetch('https://api.coingecko.com/api/v3/global');
+      const gData = await gRes.json();
+      const d = gData && gData.data;
+      if (d){
+        globalStats = {
+          totalMcapUsd: d.total_market_cap ? d.total_market_cap.usd : null,
+          mcapChangePct: d.market_cap_change_percentage_24h_usd,
+          btcDominance: d.market_cap_percentage ? d.market_cap_percentage.btc : null,
+          ethDominance: d.market_cap_percentage ? d.market_cap_percentage.eth : null,
+          stableDominance: d.market_cap_percentage ? ((d.market_cap_percentage.usdt || 0) + (d.market_cap_percentage.usdc || 0)) : null
+        };
+      }
+    }catch(e){
+      console.warn('global crypto stats failed:', e.message || e);
+    }
+
+    return { coins, ethBtcRatio, fng, globalStats };
+  }catch(e){
+    console.warn('crypto section failed:', e.message || e);
+    return null;
+  }
+}
+
+async function loadExchangeRate(){
+  try{
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    const data = await res.json();
+    return (data && data.rates && data.rates.KRW) || null;
+  }catch(e){
+    console.warn('exchange rate failed:', e.message || e);
+    return null;
+  }
+}
+
+async function loadKimchiPremium(krwRate){
+  if (!krwRate) return null;
+  try{
+    const [upbitRes, btcRes, ethRes] = await Promise.all([
+      fetch('https://api.upbit.com/v1/ticker?markets=KRW-BTC,KRW-ETH'),
+      fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT'),
+      fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT')
+    ]);
+    const upbitData = await upbitRes.json();
+    const btcBinance = await btcRes.json();
+    const ethBinance = await ethRes.json();
+
+    const upBtc = Array.isArray(upbitData) ? upbitData.find(d => d.market === 'KRW-BTC') : null;
+    const upEth = Array.isArray(upbitData) ? upbitData.find(d => d.market === 'KRW-ETH') : null;
+
+    const result = {};
+    if (upBtc && btcBinance.price){
+      const globalKrw = parseFloat(btcBinance.price) * krwRate;
+      result.BTC = { upbitPrice: upBtc.trade_price, globalPriceKrw: globalKrw, premium: ((upBtc.trade_price - globalKrw) / globalKrw) * 100 };
+    }
+    if (upEth && ethBinance.price){
+      const globalKrw = parseFloat(ethBinance.price) * krwRate;
+      result.ETH = { upbitPrice: upEth.trade_price, globalPriceKrw: globalKrw, premium: ((upEth.trade_price - globalKrw) / globalKrw) * 100 };
+    }
+    return Object.keys(result).length ? result : null;
+  }catch(e){
+    console.warn('kimchi premium failed:', e.message || e);
+    return null;
+  }
+}
+
+async function loadBtcOnchainStats(){
+  try{
+    const [statsRes, historyRes] = await Promise.all([
+      fetch('https://api.blockchain.info/stats?format=json'),
+      fetch('https://api.blockchain.info/charts/hash-rate?timespan=8days&format=json').catch(e => { console.warn('hashrate history failed:', e.message || e); return null; })
+    ]);
+    const data = await statsRes.json();
+    let hashRateChangePct = null;
+    if (historyRes){
+      try{
+        const historyData = await historyRes.json();
+        const values = (historyData.values || []).map(v => v.y).filter(v => v != null);
+        if (values.length >= 2){
+          const first = values[0], last = values[values.length - 1];
+          if (first) hashRateChangePct = ((last - first) / first) * 100;
+        }
+      }catch(e){ console.warn('hashrate history parse failed:', e.message || e); }
+    }
+    return {
+      hashRateEhs: data.hash_rate != null ? data.hash_rate / 1e9 : null, // GH/s -> EH/s
+      hashRateChangePct,
+      difficulty: data.difficulty,
+      txVolumeUsd24h: data.estimated_transaction_volume_usd
+    };
+  }catch(e){
+    console.warn('btc onchain stats failed:', e.message || e);
+    return null;
+  }
+}
+
+async function loadUpbitTopVolume(limit){
+  try{
+    const marketRes = await fetch('https://api.upbit.com/v1/market/all?isDetails=false');
+    const markets = await marketRes.json();
+    const krwMarkets = markets.filter(m => m.market.startsWith('KRW-')).map(m => m.market);
+    if (!krwMarkets.length) throw new Error('no KRW markets');
+    const tickerRes = await fetch('https://api.upbit.com/v1/ticker?markets=' + krwMarkets.join(','));
+    const tickers = await tickerRes.json();
+    tickers.sort((a, b) => b.acc_trade_price_24h - a.acc_trade_price_24h);
+    return tickers.slice(0, limit || 10).map(t => {
+      const marketInfo = markets.find(m => m.market === t.market);
+      return {
+        market: t.market,
+        name: marketInfo ? marketInfo.korean_name : t.market,
+        price: t.trade_price,
+        changePct: t.signed_change_rate * 100,
+        volume24h: t.acc_trade_price_24h
+      };
+    });
+  }catch(e){
+    console.warn('upbit top volume failed:', e.message || e);
+    return null;
+  }
+}
+
+function cumulativeReturn(series){
+  if (!series || series.length < 2) return null;
+  const first = series[0], last = series[series.length - 1];
+  if (!first) return null;
+  return ((last - first) / first) * 100;
+}
+
+async function loadActiveAddresses(){
+  try{
+    const res = await fetch('https://api.blockchain.info/charts/n-unique-addresses?timespan=30days&format=json');
+    const data = await res.json();
+    const values = (data.values || []).map(v => v.y).filter(v => v != null);
+    if (!values.length) throw new Error('no data');
+    const current = values[values.length - 1];
+    const avg = values.reduce((s, v) => s + v, 0) / values.length;
+    const changePct = avg ? ((current - avg) / avg) * 100 : null;
+    return { current, avg, changePct };
+  }catch(e){
+    console.warn('active addresses failed:', e.message || e);
+    return null;
+  }
+}
+
+async function loadStablecoinSupply(){
+  try{
+    const ids = ['tether', 'usd-coin'];
+    const results = await Promise.all(ids.map(id =>
+      fetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=30&interval=daily').then(r => r.json())
+    ));
+    let currentTotal = 0, pastTotal = 0;
+    const breakdown = {};
+    ids.forEach((id, i) => {
+      const caps = ((results[i] && results[i].market_caps) || []).map(c => c[1]);
+      if (caps.length){
+        currentTotal += caps[caps.length - 1];
+        pastTotal += caps[0];
+        breakdown[id] = caps[caps.length - 1];
+      }
+    });
+    if (!currentTotal) throw new Error('no stablecoin data');
+    const changePct = pastTotal ? ((currentTotal - pastTotal) / pastTotal) * 100 : null;
+    return { total: currentTotal, changePct, usdt: breakdown.tether, usdc: breakdown['usd-coin'] };
+  }catch(e){
+    console.warn('stablecoin supply failed:', e.message || e);
+    return null;
+  }
+}
+
+async function loadFundingRate(){
+  try{
+    const res = await fetch('https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT');
+    const data = await res.json();
+    const rate = parseFloat(data.lastFundingRate);
+    if (isNaN(rate)) throw new Error('invalid funding rate');
+    return { ratePct: rate * 100 };
+  }catch(e){
+    console.warn('funding rate failed:', e.message || e);
+    return null;
+  }
+}
+
+async function loadLongShortRatio(){
+  try{
+    const res = await fetch('https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=BTCUSDT&period=1h&limit=1');
+    const data = await res.json();
+    const d0 = data[0];
+    if (!d0) throw new Error('no data');
+    return { ratio: parseFloat(d0.longShortRatio), longAccount: parseFloat(d0.longAccount), shortAccount: parseFloat(d0.shortAccount) };
+  }catch(e){
+    console.warn('long/short ratio failed:', e.message || e);
+    return null;
+  }
+}
+
+async function loadOpenInterest(){
+  try{
+    const res = await fetch('https://fapi.binance.com/futures/data/openInterestHist?symbol=BTCUSDT&period=4h&limit=7');
+    const data = await res.json();
+    if (!data.length) throw new Error('no data');
+    const current = parseFloat(data[data.length - 1].sumOpenInterestValue);
+    const prev = parseFloat(data[0].sumOpenInterestValue);
+    const changePct = prev ? ((current - prev) / prev) * 100 : null;
+    return { current, changePct };
+  }catch(e){
+    console.warn('open interest failed:', e.message || e);
+    return null;
+  }
+}
+
+async function loadMarketData(){
+  const [indices, crypto, krw, watchlist, macro, leverageEtfs, tsla, btcOnchain, upbitTop, activeAddr, stablecoin, funding, longShort, openInterest] = await Promise.all([
+    Promise.all(MARKET_INDEX_SYMBOLS.map(loadIndexData)),
+    loadCryptoSection(),
+    loadExchangeRate(),
+    Promise.all(WATCHLIST_SYMBOLS.map(loadIndexData)),
+    Promise.all(MACRO_SYMBOLS.map(loadIndexData)),
+    Promise.all(LEVERAGE_ETF_PAIRS.map(p => loadIndexData({ key:p.etfYahoo, name:p.etfName, yahoo:p.etfYahoo, unit:'usd' }))),
+    loadIndexData({ key:'tsla', name:'TSLA', yahoo:'TSLA', unit:'usd' }),
+    loadBtcOnchainStats(),
+    loadUpbitTopVolume(10),
+    loadActiveAddresses(),
+    loadStablecoinSupply(),
+    loadFundingRate(),
+    loadLongShortRatio(),
+    loadOpenInterest()
+  ]);
+  const vix = await loadIndexData({ key:'vix', name:'VIX', yahoo:'^VIX', trackDrawdown:false });
+  const kimchi = await loadKimchiPremium(krw);
+  const payload = { indices, vix, crypto, krw, watchlist, macro, leverageEtfs, tsla, btcOnchain, upbitTop, kimchi, activeAddr, stablecoin, funding, longShort, openInterest, ts: Date.now() };
+  try{ localStorage.setItem(MARKET_CACHE_KEY, JSON.stringify(payload)); }catch(e){}
+  return payload;
+}
+
+function loadMarketCache(){
+  try{
+    const raw = localStorage.getItem(MARKET_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+
+function sparklineSVG(values, color){
+  if (!values || values.length < 2) return '';
+  const w = 100, h = 28;
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = (max - min) || 1;
+  const pts = values.map((v, i) => {
+    const x = (i / (values.length - 1)) * w;
+    const y = h - ((v - min) / range) * h;
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  }).join(' ');
+  return '<svg class="sparkline" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+    '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2"/></svg>';
+}
+
+function miniGaugeSVG(pct){
+  // pct: 0..1 position along the semicircle (reuses the #gaugeGrad gradient defined in the masthead gauge)
+  const clamped = Math.max(0, Math.min(1, pct));
+  const angle = -90 + clamped * 180;
+  const offset = (207 * (1 - clamped)).toFixed(1);
+  return '<svg class="mini-gauge" viewBox="0 0 120 92">' +
+    '<path d="M 12 78 A 48 48 0 1 1 108 78" fill="none" stroke="#263349" stroke-width="10" stroke-linecap="round"/>' +
+    '<path d="M 12 78 A 48 48 0 1 1 108 78" fill="none" stroke="url(#gaugeGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="207" stroke-dashoffset="' + offset + '"/>' +
+    '<line x1="60" y1="78" x2="60" y2="34" stroke="#EDEEF2" stroke-width="3" stroke-linecap="round" transform="rotate(' + angle.toFixed(1) + ' 60 78)"/>' +
+    '<circle cx="60" cy="78" r="4" fill="#EDEEF2"/></svg>';
+}
+
+function fngBarHtml(value){
+  const pct = Math.max(0, Math.min(100, value));
+  let note = '';
+  if (value <= 25) note = '<div class="fng-note">⚠️ 현재 시장은 "공포" 구간에 있습니다. 과거 데이터상 바닥권에 가까울 수 있습니다.</div>';
+  else if (value >= 75) note = '<div class="fng-note">⚠️ 현재 시장은 "탐욕" 구간에 있습니다. 과거 데이터상 과열권에 가까울 수 있습니다.</div>';
+  return '<div class="fng-bar-wrap">' +
+      '<div class="fng-bar"><div class="fng-pointer" style="left:' + pct + '%"></div></div>' +
+      '<div class="fng-bar-labels"><span>극도의 공포 (0)</span><span>중립 (50)</span><span>극도의 탐욕 (100)</span></div>' +
+    '</div>' + note;
+}
+
+function donutChartSVG(segments, size, thickness){
+  size = size || 140; thickness = thickness || 18;
+  const r = (size - thickness) / 2;
+  const cx = size / 2, cy = size / 2;
+  const circumference = 2 * Math.PI * r;
+  let offsetAcc = 0;
+  const arcs = segments.map(seg => {
+    const segLen = Math.max(0, (seg.pct / 100) * circumference);
+    const dasharray = segLen.toFixed(1) + ' ' + (circumference - segLen).toFixed(1);
+    const dashoffset = (-offsetAcc).toFixed(1);
+    offsetAcc += segLen;
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + seg.color + '" stroke-width="' + thickness +
+      '" stroke-dasharray="' + dasharray + '" stroke-dashoffset="' + dashoffset + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
+  }).join('');
+  return '<svg viewBox="0 0 ' + size + ' ' + size + '" width="' + size + '" height="' + size + '">' + arcs + '</svg>';
+}
+
+function stablecoinBarsHtml(s){
+  if (!s || !s.total) return '';
+  const usdtAmt = s.usdt || 0, usdcAmt = s.usdc || 0;
+  const otherAmt = Math.max(0, s.total - usdtAmt - usdcAmt);
+  const rows = [
+    { label:'USDT', amt:usdtAmt, color:'#3FA796' },
+    { label:'USDC', amt:usdcAmt, color:'#3B82F6' },
+    { label:'기타', amt:otherAmt, color:'#5C6B82' }
+  ];
+  return '<div class="stable-bars">' + rows.map(r => {
+    const pct = s.total ? (r.amt / s.total * 100) : 0;
+    return '<div class="stable-row">' +
+      '<div class="stable-row-head"><span>' + r.label + '</span><span>$' + (r.amt / 1e9).toFixed(1) + 'B (' + pct.toFixed(1) + '%)</span></div>' +
+      '<div class="stable-bar-track"><div class="stable-bar-fill" style="width:' + pct.toFixed(1) + '%; background:' + r.color + '"></div></div>' +
+    '</div>';
+  }).join('') + '</div>';
+}
+
+function longShortBarHtml(l){
+  if (!l) return '';
+  let longPct;
+  if (l.longAccount != null) longPct = l.longAccount * 100;
+  else longPct = (l.ratio / (l.ratio + 1)) * 100;
+  const shortPct = 100 - longPct;
+  return '<div class="ls-bar-track">' +
+      '<div class="ls-bar-long" style="width:' + longPct.toFixed(1) + '%"></div>' +
+      '<div class="ls-bar-short" style="width:' + shortPct.toFixed(1) + '%"></div>' +
+    '</div>' +
+    '<div class="ls-bar-labels"><span>롱 ' + longPct.toFixed(1) + '%</span><span>숏 ' + shortPct.toFixed(1) + '%</span></div>';
+}
+
+function koreanFngLabel(label){
+  const map = {
+    'Extreme Fear': '극단적 공포',
+    'Fear': '공포',
+    'Neutral': '중립',
+    'Greed': '탐욕',
+    'Extreme Greed': '극단적 탐욕'
+  };
+  return map[label] || label;
+}
+
+function buildMarketSummary(data){
+  const validIdx = (data.indices || []).filter(ix => !ix.error && ix.changePct != null);
+  let idxSentence = '';
+  if (validIdx.length){
+    const avg = validIdx.reduce((s, ix) => s + ix.changePct, 0) / validIdx.length;
+    const absAvg = Math.abs(avg);
+    if (absAvg < 0.5){
+      idxSentence = '오늘 국내외 주요 지수는 대체로 보합권에서 움직이고 있습니다.';
+    }else{
+      const dir = avg >= 0 ? '상승' : '하락';
+      const mag = absAvg < 1.5 ? '완만한' : (absAvg < 3 ? '뚜렷한' : '큰 폭의');
+      idxSentence = '오늘 국내외 주요 지수는 평균적으로 ' + mag + ' ' + dir + ' 흐름을 보이고 있습니다.';
+    }
+    const notable = validIdx.filter(ix => ix.athDrawdownPct != null && Math.abs(ix.athDrawdownPct) >= 15);
+    if (notable.length){
+      idxSentence += ' ' + notable.map(ix => escapeHtml(ix.name) + '는 사상 최고점 대비 ' + Math.abs(ix.athDrawdownPct).toFixed(1) + '% 낮은 상태').join(', ') + '입니다.';
+    }
+  }
+
+  let vixSentence = '';
+  if (data.vix && !data.vix.error){
+    const v = data.vix.current;
+    const label = v < 20 ? '투자자들이 비교적 안심하고 있는' : (v < 30 ? '다소 불안감이 커진' : '공포 심리가 강한');
+    vixSentence = ' 시장의 불안 심리를 나타내는 변동성 지수(VIX)는 ' + v.toFixed(1) + '로, ' + label + ' 상태입니다.';
+  }
+
+  let krwSentence = '';
+  if (data.krw){
+    krwSentence = ' 원/달러 환율은 1달러당 ' + Math.round(data.krw).toLocaleString('ko-KR') + '원 수준입니다.';
+  }
+
+  let cryptoSentence = '';
+  if (data.crypto && data.crypto.coins){
+    const c = data.crypto;
+    const btc = c.coins.btc, eth = c.coins.eth;
+    const parts = [];
+    if (btc && btc.changePct != null){
+      parts.push('비트코인은 24시간 동안 ' + Math.abs(btc.changePct).toFixed(1) + '% ' + (btc.changePct >= 0 ? '상승' : '하락'));
+    }
+    if (eth && eth.changePct != null){
+      parts.push('이더리움은 ' + Math.abs(eth.changePct).toFixed(1) + '% ' + (eth.changePct >= 0 ? '상승' : '하락'));
+    }
+    let fngPart = '';
+    if (c.fng){
+      fngPart = ' 시장 심리를 나타내는 공포·탐욕 지수는 ' + c.fng.value + '(' + koreanFngLabel(c.fng.label) + ')입니다.';
+    }
+    cryptoSentence = (parts.length ? ' 암호화폐 시장에서는 ' + parts.join(', ') + '했습니다.' : '') + fngPart;
+  }
+
+  const body = (idxSentence + vixSentence + krwSentence + cryptoSentence).trim();
+  if (!body) return '';
+
+  return '<div class="market-summary">' +
+      '<div class="market-summary-title">오늘의 시장, 한눈에 보기</div>' +
+      '<p>' + body + '</p>' +
+    '</div>' +
+    '<div class="market-summary-note">이 요약은 시장 상황을 쉽게 이해하도록 돕는 참고 정보이며, 투자 판단은 본인의 몫입니다.</div>';
+}
+
+function fmtChange(pct){
+  if (pct == null || isNaN(pct)) return '';
+  const cls = pct >= 0 ? 'price-up' : 'price-down';
+  const arrow = pct >= 0 ? '▲' : '▼';
+  return '<div class="market-card-change ' + cls + '">' + arrow + ' ' + Math.abs(pct).toFixed(2) + '%</div>';
+}
+
+function nuanceClassFor(label){
+  if (label.indexOf('강세') === 0) return 'up';
+  if (label.indexOf('약세') === 0) return 'down';
+  return 'neutral';
+}
+
+function nuanceBox(label, bodyHtml){
+  return '<div class="mini-interpret">' +
+    '<span class="nuance-badge ' + nuanceClassFor(label) + '">' + escapeHtml(label) + '</span>' +
+    '<p>' + bodyHtml + '</p>' +
+  '</div>';
+}
+
+function nuanceBoxTone(label, tone, bodyHtml){
+  return '<div class="mini-interpret">' +
+    '<span class="nuance-badge ' + tone + '">' + escapeHtml(label) + '</span>' +
+    '<p>' + bodyHtml + '</p>' +
+  '</div>';
+}
+
+function renderSignalCard(opts){
+  const barColor = opts.tone === 'up' ? 'var(--price-up)' : (opts.tone === 'down' ? 'var(--price-down)' : 'var(--accent-gold)');
+  return '<div class="signal-card" style="border-left-color:' + barColor + '">' +
+    '<div class="signal-card-title">' + escapeHtml(opts.title) + '</div>' +
+    '<div class="signal-card-value">' + opts.value + '</div>' +
+    (opts.changeLabel ? '<div class="signal-card-change ' + (opts.tone === 'up' ? 'price-up' : (opts.tone === 'down' ? 'price-down' : '')) + '">' + opts.changeLabel + '</div>' : '') +
+    '<span class="nuance-badge ' + opts.tone + '">' + escapeHtml(opts.badgeLabel) + '</span>' +
+    (opts.extraHtml || '') +
+    (opts.note ? '<div class="signal-card-note">' + escapeHtml(opts.note) + '</div>' : '') +
+  '</div>';
+}
+
+function buildCryptoOverallVerdict(ctx){
+  let score = 0;
+  const notes = [];
+
+  if (ctx.fng){
+    if (ctx.fng.value <= 25){ score += 1; notes.push('공포 구간(과거 데이터상 바닥권 근접 가능성)'); }
+    else if (ctx.fng.value >= 75){ score -= 1; notes.push('탐욕 구간(과열 주의)'); }
+  }
+  if (ctx.activeAddr && ctx.activeAddr.changePct != null){
+    if (ctx.activeAddr.changePct > 3){ score += 1; notes.push('활성 주소수 증가'); }
+    else if (ctx.activeAddr.changePct < -3){ score -= 1; notes.push('활성 주소수 감소'); }
+  }
+  if (ctx.hashRateChangePct != null){
+    if (ctx.hashRateChangePct > 3){ score += 1; notes.push('해시레이트 상승'); }
+    else if (ctx.hashRateChangePct < -3){ score -= 1; notes.push('해시레이트 하락'); }
+  }
+  if (ctx.funding){
+    if (ctx.funding.ratePct > 0.05){ score -= 1; notes.push('펀딩비 과열(롱 쏠림)'); }
+    else if (ctx.funding.ratePct < -0.02){ score += 1; notes.push('펀딩비 마이너스(숏 쏠림, 반등 여지)'); }
+  }
+  if (ctx.longShort){
+    if (ctx.longShort.ratio > 1.2){ score -= 1; notes.push('롱 포지션 쏠림'); }
+    else if (ctx.longShort.ratio < 0.83){ score += 1; notes.push('숏 포지션 쏠림(반등 여지)'); }
+  }
+
+  let label = '중립';
+  let tone = 'neutral';
+  if (score >= 3){ label = '긍정적'; tone = 'up'; }
+  else if (score >= 1){ label = '중립~약간 긍정적'; tone = 'up'; }
+  else if (score <= -3){ label = '부정적'; tone = 'down'; }
+  else if (score <= -1){ label = '중립~약간 부정적'; tone = 'down'; }
+
+  const body = notes.length
+    ? notes.join(' + ') + ' 조합이 함께 나타나고 있습니다.'
+    : '뚜렷한 쏠림 신호 없이 지표들이 고르게 나타나는 중립적인 상황입니다.';
+
+  return nuanceBoxTone(label, tone, body);
+}
+
+function buildOnchainInterpretation(o, activeAddr){
+  if (!o) return '';
+  let nuance = '중립';
+  let sentences = [];
+  if (o.hashRateChangePct != null){
+    if (o.hashRateChangePct > 3) nuance = '강세';
+    else if (o.hashRateChangePct < -3) nuance = '약세';
+    sentences.push('최근 8일간 해시레이트가 ' + (o.hashRateChangePct >= 0 ? '+' : '') + o.hashRateChangePct.toFixed(1) + '% ' +
+      (o.hashRateChangePct >= 0 ? '증가' : '감소') + '했습니다. 해시레이트 상승은 채굴자들이 더 많은 연산력을 투입하고 있다는 뜻으로 네트워크에 대한 신뢰가 유지되고 있음을 시사하고, 감소는 채산성 악화나 채굴자 이탈 가능성을 시사합니다.');
+  }else{
+    sentences.push('해시레이트 추세 데이터를 아직 불러오지 못했습니다.');
+  }
+  if (activeAddr && activeAddr.changePct != null){
+    sentences.push('활성 주소수는 30일 평균 대비 ' + (activeAddr.changePct >= 0 ? '+' : '') + activeAddr.changePct.toFixed(1) + '% 로, ' +
+      (activeAddr.changePct >= 0 ? '네트워크 사용량이 늘고 있습니다.' : '네트워크 사용량이 다소 위축되는 신호입니다.'));
+    if (activeAddr.changePct < -5 && nuance === '중립') nuance = '약세';
+  }
+  return nuanceBox(nuance, sentences.join(' '));
+}
+
+const WATCHLIST_GROUPS = {
+  growth: ['tigersp500', 'tigernasdaq'],
+  defensive: ['acegold', 'kodexust10y', 'kodexshort'],
+  dividend: ['kodexdiv', 'tigerusdiv'],
+  sector: ['kodexsemi', 'kodexship', 'kodexdefense']
+};
+
+function avgChangeByKeys(list, keys){
+  const items = (list || []).filter(w => keys.includes(w.key) && !w.error && w.changePct != null);
+  if (!items.length) return null;
+  return items.reduce((s, w) => s + w.changePct, 0) / items.length;
+}
+
+function buildWatchlistInterpretation(watchlist){
+  if (!watchlist || !watchlist.length) return '';
+  const growth = avgChangeByKeys(watchlist, WATCHLIST_GROUPS.growth);
+  const defensive = avgChangeByKeys(watchlist, WATCHLIST_GROUPS.defensive);
+  const dividend = avgChangeByKeys(watchlist, WATCHLIST_GROUPS.dividend);
+  const sector = avgChangeByKeys(watchlist, WATCHLIST_GROUPS.sector);
+
+  const parts = [];
+  if (growth != null) parts.push('미국지수 추종 ETF 평균 ' + (growth >= 0 ? '+' : '') + growth.toFixed(1) + '%');
+  if (defensive != null) parts.push('방어자산군(금·채권) 평균 ' + (defensive >= 0 ? '+' : '') + defensive.toFixed(1) + '%');
+  if (dividend != null) parts.push('배당 ETF 평균 ' + (dividend >= 0 ? '+' : '') + dividend.toFixed(1) + '%');
+  if (sector != null) parts.push('국내 섹터(반도체·조선·방산) 평균 ' + (sector >= 0 ? '+' : '') + sector.toFixed(1) + '%');
+
+  let nuance = '중립';
+  let regime = '';
+  if (growth != null && defensive != null){
+    const gap = growth - defensive;
+    if (gap > 0.5){
+      nuance = '강세';
+      regime = ' 성장자산이 방어자산보다 강해 위험선호 심리가 우세해 보입니다.';
+    }else if (gap < -0.5){
+      nuance = '약세';
+      regime = ' 방어자산이 성장자산보다 강해 위험회피 심리가 우세해 보입니다.';
+    }else{
+      regime = ' 성장자산과 방어자산의 온도차가 크지 않은 하루입니다.';
+    }
+  }
+
+  const body = parts.length ? (parts.join(', ') + '.' + regime) : '관심종목 데이터를 계산할 수 없습니다.';
+  return nuanceBox(nuance, body);
+}
+
+function buildMacroInterpretation(macro){
+  if (!macro || !macro.length) return '';
+  const byKey = {};
+  macro.forEach(m => { byKey[m.key] = m; });
+  const gold = byKey.gold, yieldItem = byKey.ust10y, oil = byKey.wti;
+
+  const parts = [];
+  if (gold && !gold.error) parts.push('금 ' + (gold.changePct >= 0 ? '+' : '') + gold.changePct.toFixed(1) + '%');
+  if (yieldItem && !yieldItem.error) parts.push('미국 10년물 금리 ' + yieldItem.current.toFixed(2) + '%(' + (yieldItem.changePct >= 0 ? '+' : '') + yieldItem.changePct.toFixed(1) + '%)');
+  if (oil && !oil.error) parts.push('WTI ' + (oil.changePct >= 0 ? '+' : '') + oil.changePct.toFixed(1) + '%');
+
+  let nuance = '중립';
+  let regime = '';
+  if (gold && yieldItem && !gold.error && !yieldItem.error){
+    if (gold.changePct > 0.3 && yieldItem.changePct < -0.3){
+      nuance = '강세';
+      regime = ' 금리 하락과 금 가격 상승이 함께 나타나 안전자산 선호 심리가 강해지고 있다는 신호로 해석될 수 있습니다.';
+    }else if (gold.changePct < -0.3 && yieldItem.changePct > 0.3){
+      nuance = '약세';
+      regime = ' 금리 상승과 금 가격 하락이 함께 나타나 위험자산 선호 심리가 강해지고 있다는 신호로 해석될 수 있습니다.';
+    }
+  }
+  if (oil && !oil.error && Math.abs(oil.changePct) > 2){
+    regime += (oil.changePct > 0 ? ' 유가가 크게 올라 인플레이션 우려를 자극할 수 있습니다.' : ' 유가가 크게 내려 인플레이션 부담이 완화될 수 있습니다.');
+  }
+
+  const body = parts.length ? (parts.join(', ') + '.' + regime) : '매크로 지표 데이터를 계산할 수 없습니다.';
+  return nuanceBox(nuance, body);
+}
+
+function formatCardValue(item){
+  const v = item.current;
+  if (item.unit === 'usd') return '$' + v.toLocaleString('en-US', { maximumFractionDigits: v < 10 ? 4 : 2 });
+  if (item.unit === 'pct') return v.toFixed(3) + '%';
+  if (item.unit === 'krw') return Math.round(v).toLocaleString('ko-KR') + '원';
+  return v.toLocaleString('ko-KR', { maximumFractionDigits: 2 });
+}
+
+function renderIndexCard(item){
+  if (item.error){
+    return '<div class="market-card"><div class="market-card-title">' + escapeHtml(item.name) + '</div><div class="market-error">불러오기 실패</div></div>';
+  }
+  const changeColor = item.changePct >= 0 ? '#E5484D' : '#3B82F6';
+  const badge = item.athDrawdownPct != null ? '<div class="trigger-badge">' + drawdownStage(item.athDrawdownPct) + '</div>' : '';
+  const attrs = 'data-chart-type="yahoo" data-chart-symbol="' + escapeHtml(item.yahoo || '') + '" data-chart-name="' + escapeHtml(item.name) + '" data-chart-unit="' + (item.unit || 'index') + '"' + (item.divideBy10 ? ' data-chart-divide10="1"' : '');
+  return '<div class="market-card" ' + attrs + '>' +
+    '<div class="market-card-title">' + escapeHtml(item.name) + '</div>' +
+    '<div class="market-card-value">' + formatCardValue(item) + '</div>' +
+    fmtChange(item.changePct) +
+    sparklineSVG(item.sparkline, changeColor) +
+    badge +
+  '</div>';
+}
+
+function renderMarket(data){
+  const el = document.getElementById('marketView');
+  if (!data){
+    el.innerHTML = '<div class="market-error">시장 데이터를 불러오지 못했습니다. 새로고침을 눌러 다시 시도해 주세요.</div>';
+    return;
+  }
+
+  const indexCards = data.indices.map(renderIndexCard).join('');
+  const watchlistCards = (data.watchlist || []).map(renderIndexCard).join('');
+  const macroCards = (data.macro || []).map(renderIndexCard).join('');
+
+  let vixHtml = '<div class="market-error">VIX 정보를 불러오지 못했습니다.</div>';
+  if (data.vix && !data.vix.error){
+    const vixPct = Math.min(1, data.vix.current / 50); // 0~50 범위를 게이지에 매핑
+    const vixNote = data.vix.current < 20 ? '안정적인 변동성' : (data.vix.current < 30 ? '변동성 확대 구간' : '공포 구간');
+    vixHtml = '<div class="market-wide-card">' + miniGaugeSVG(vixPct) +
+      '<div class="market-wide-body">' +
+        '<div class="market-wide-title">VIX (변동성 지수)</div>' +
+        '<div class="market-wide-value">' + data.vix.current.toFixed(2) + '</div>' +
+        '<div class="market-wide-note">' + vixNote + '</div>' +
+      '</div></div>';
+  }
+
+  const krwHtml = data.krw
+    ? '<div class="market-wide-card"><div class="market-wide-body">' +
+        '<div class="market-wide-title">원/달러 환율</div>' +
+        '<div class="market-wide-value">' + data.krw.toLocaleString('ko-KR', { maximumFractionDigits: 2 }) + '원</div>' +
+      '</div></div>'
+    : '<div class="market-error">환율 정보를 불러오지 못했습니다.</div>';
+
+  let cryptoHtml = '<div class="market-error">암호화폐 정보를 불러오지 못했습니다.</div>';
+  if (data.crypto && data.crypto.coins){
+    const c = data.crypto;
+    const coinCards = CRYPTO_COINS.map(meta => {
+      const coin = c.coins[meta.key];
+      if (!coin || coin.price == null) return '<div class="market-card"><div class="market-card-title">' + meta.label + '</div><div class="market-error">불러오기 실패</div></div>';
+      const color = (coin.changePct || 0) >= 0 ? '#E5484D' : '#3B82F6';
+      const priceStr = coin.price >= 1
+        ? '$' + coin.price.toLocaleString('en-US', { maximumFractionDigits: 2 })
+        : '$' + coin.price.toLocaleString('en-US', { maximumFractionDigits: 4 });
+      const attrs = 'data-chart-type="coingecko" data-chart-symbol="' + meta.id + '" data-chart-name="' + meta.label + '" data-chart-unit="usd"';
+      return '<div class="market-card" ' + attrs + '>' +
+        '<div class="market-card-title">' + meta.label + '</div>' +
+        '<div class="market-card-value">' + priceStr + '</div>' +
+        fmtChange(coin.changePct) +
+        sparklineSVG(coin.sparkline, color) +
+      '</div>';
+    }).join('');
+
+    let fngHtml = '';
+    if (c.fng){
+      fngHtml = '<div class="market-wide-card"><div class="market-wide-body" style="width:100%;">' +
+          '<div class="market-wide-title">공포·탐욕 지수 (Fear &amp; Greed Index)</div>' +
+          '<div class="market-wide-value">' + c.fng.value + ' <span style="font-size:12px;color:var(--text-muted);font-weight:400;">(' + escapeHtml(koreanFngLabel(c.fng.label)) + ')</span></div>' +
+          fngBarHtml(c.fng.value) +
+        '</div></div>';
+    }
+
+    let globalHtml = '';
+    if (c.globalStats && c.globalStats.totalMcapUsd != null){
+      const mcapTrillion = c.globalStats.totalMcapUsd / 1e12;
+      const mcapChange = c.globalStats.mcapChangePct;
+      globalHtml = '<div class="market-wide-card"><div class="market-wide-body">' +
+        '<div class="market-wide-title">전체 암호화폐 시가총액</div>' +
+        '<div class="market-wide-value">$' + mcapTrillion.toFixed(2) + '조' + '</div>' +
+        (mcapChange != null ? fmtChange(mcapChange) : '') +
+      '</div></div>';
+
+      if (c.globalStats.btcDominance != null){
+        const btcPct = c.globalStats.btcDominance;
+        const ethPct = c.globalStats.ethDominance || 0;
+        const stablePct = c.globalStats.stableDominance || 0;
+        const otherPct = Math.max(0, 100 - btcPct - ethPct - stablePct);
+        const segments = [
+          { label:'Bitcoin', pct:btcPct, color:'#E8A33D' },
+          { label:'Ethereum', pct:ethPct, color:'#6366F1' },
+          { label:'Stablecoins', pct:stablePct, color:'#3FA796' },
+          { label:'Other Altcoins', pct:otherPct, color:'#5C6B82' }
+        ];
+        const legend = segments.map(s =>
+          '<div class="donut-legend-row"><span class="donut-dot" style="background:' + s.color + '"></span>' + s.label + ' <b>' + s.pct.toFixed(1) + '%</b></div>'
+        ).join('');
+        globalHtml += '<div class="market-wide-card donut-card">' +
+          '<div class="donut-chart-wrap">' + donutChartSVG(segments) +
+            '<div class="donut-center"><div class="donut-center-value">' + btcPct.toFixed(1) + '%</div><div class="donut-center-label">BTC 점유율</div></div>' +
+          '</div>' +
+          '<div class="donut-legend">' +
+            '<div class="market-wide-title" style="margin-bottom:8px;">비트코인 도미넌스 (Bitcoin Dominance)</div>' +
+            legend +
+            '<div class="market-wide-note" style="margin-top:6px;">' + (btcPct >= 55 ? '비트코인 시즌에 가까움' : (btcPct <= 45 ? '알트코인 강세 신호' : '중립 구간')) + '</div>' +
+          '</div>' +
+        '</div>';
+      }
+    }
+
+    const ratioHtml = c.ethBtcRatio != null
+      ? '<div class="market-wide-card"><div class="market-wide-body">' +
+          '<div class="market-wide-title">ETH/BTC 비율</div>' +
+          '<div class="market-wide-value">' + c.ethBtcRatio.toFixed(5) + '</div>' +
+        '</div></div>'
+      : '';
+    cryptoHtml = '<div class="market-grid">' + coinCards + '</div>' + fngHtml + globalHtml + ratioHtml;
+  }
+
+  let kimchiHtml = '';
+  if (data.kimchi){
+    const rows = Object.keys(data.kimchi).map(sym => {
+      const k = data.kimchi[sym];
+      const cls = k.premium >= 0 ? 'price-up' : 'price-down';
+      return '<div class="kimchi-row"><span>' + sym + '</span><span class="' + cls + '">' + (k.premium >= 0 ? '+' : '') + k.premium.toFixed(2) + '%</span></div>';
+    }).join('');
+    kimchiHtml = '<div class="market-wide-card"><div class="market-wide-body" style="width:100%;">' +
+      '<div class="market-wide-title">김치프리미엄 (업비트 vs 바이낸스)</div>' +
+      '<div class="kimchi-rows">' + rows + '</div>' +
+    '</div></div>';
+  }
+
+  let onchainHtml = '';
+  if (data.btcOnchain){
+    const o = data.btcOnchain;
+    onchainHtml = '<div class="market-wide-card"><div class="market-wide-body">' +
+      '<div class="market-wide-title">비트코인 온체인 지표</div>' +
+      '<div class="market-wide-value">' + (o.hashRateEhs != null ? o.hashRateEhs.toFixed(1) + ' EH/s' : '-') + '</div>' +
+      '<div class="market-wide-note">해시레이트' +
+        (o.difficulty != null ? ' · 난이도 ' + (o.difficulty / 1e12).toFixed(2) + 'T' : '') +
+        (o.txVolumeUsd24h != null ? ' · 24시간 전송액 $' + (o.txVolumeUsd24h / 1e9).toFixed(2) + 'B' : '') +
+      '</div>' +
+    '</div></div>';
+  }
+  if (data.activeAddr){
+    const a = data.activeAddr;
+    const tone = a.changePct == null ? 'neutral' : (a.changePct > 3 ? 'up' : (a.changePct < -3 ? 'down' : 'neutral'));
+    const badgeLabel = tone === 'up' ? '증가세' : (tone === 'down' ? '감소세' : '보합');
+    onchainHtml += renderSignalCard({
+      title: '활성 주소수 (Active Addresses)',
+      value: Math.round(a.current).toLocaleString('en-US'),
+      changeLabel: a.changePct != null ? (a.changePct >= 0 ? '+' : '') + a.changePct.toFixed(1) + '% (30일 평균 대비)' : '',
+      tone, badgeLabel,
+      note: '네트워크 사용량 지표'
+    });
+  }
+
+  let futuresHtml = '';
+  if (data.funding){
+    const f = data.funding;
+    const tone = f.ratePct > 0.05 ? 'down' : (f.ratePct < -0.02 ? 'up' : 'neutral');
+    const badgeLabel = tone === 'down' ? '롱 과열 가능성' : (tone === 'up' ? '숏 과열 가능성' : '과열 아님');
+    futuresHtml += renderSignalCard({
+      title: 'Funding Rate (BTC, 8시간 기준)',
+      value: (f.ratePct >= 0 ? '+' : '') + f.ratePct.toFixed(4) + '%',
+      tone, badgeLabel,
+      note: '무기한 선물 펀딩비 — 양수면 롱이 숏에게 비용 지불'
+    });
+  }
+  if (data.longShort){
+    const l = data.longShort;
+    const tone = l.ratio > 1.2 ? 'down' : (l.ratio < 0.83 ? 'up' : 'neutral');
+    const badgeLabel = tone === 'down' ? '롱 쏠림' : (tone === 'up' ? '숏 쏠림' : '균형');
+    futuresHtml += renderSignalCard({
+      title: 'Long / Short Ratio (BTC)',
+      value: l.ratio.toFixed(2),
+      tone, badgeLabel,
+      extraHtml: longShortBarHtml(l),
+      note: l.ratio >= 1 ? '롱 계정 비중이 더 높음' : '숏 계정 비중이 더 높음'
+    });
+  }
+  if (data.openInterest){
+    const oi = data.openInterest;
+    const tone = oi.changePct == null ? 'neutral' : (oi.changePct > 5 ? 'up' : (oi.changePct < -5 ? 'neutral' : 'neutral'));
+    const badgeLabel = oi.changePct == null ? '-' : (oi.changePct > 5 ? '포지션 확대' : (oi.changePct < -5 ? '관망 심리' : '보합'));
+    futuresHtml += renderSignalCard({
+      title: 'Open Interest (BTC)',
+      value: '$' + (oi.current / 1e9).toFixed(1) + 'B',
+      changeLabel: oi.changePct != null ? (oi.changePct >= 0 ? '+' : '') + oi.changePct.toFixed(1) + '% (24시간)' : '',
+      tone, badgeLabel,
+      note: '전체 미결제약정 금액'
+    });
+  }
+
+  let stablecoinHtml = '';
+  if (data.stablecoin){
+    const s = data.stablecoin;
+    const tone = s.changePct == null ? 'neutral' : (s.changePct > 1 ? 'up' : (s.changePct < -1 ? 'down' : 'neutral'));
+    const badgeLabel = tone === 'up' ? '유동성 확대' : (tone === 'down' ? '유동성 축소' : '보합');
+    stablecoinHtml = renderSignalCard({
+      title: '스테이블코인 공급량 (USDT+USDC)',
+      value: '$' + (s.total / 1e9).toFixed(1) + 'B',
+      changeLabel: s.changePct != null ? (s.changePct >= 0 ? '+' : '') + s.changePct.toFixed(1) + '% (30일 전 대비)' : '',
+      tone, badgeLabel,
+      extraHtml: stablecoinBarsHtml(s),
+      note: '공급량 확대는 매수 대기 자금이 늘고 있다는 신호로 해석되기도 합니다'
+    });
+  }
+
+  let upbitTopHtml = '';
+  if (data.upbitTop && data.upbitTop.length){
+    const rows = data.upbitTop.map((t, i) => {
+      const cls = t.changePct >= 0 ? 'price-up' : 'price-down';
+      return '<div class="upbit-row"><span class="upbit-rank">' + (i + 1) + '</span><span class="upbit-name">' + escapeHtml(t.name) + '</span><span class="' + cls + '">' + (t.changePct >= 0 ? '+' : '') + t.changePct.toFixed(1) + '%</span></div>';
+    }).join('');
+    upbitTopHtml = '<div class="market-wide-card"><div class="market-wide-body" style="width:100%;">' +
+      '<div class="market-wide-title">업비트 거래대금 상위 10</div>' +
+      '<div class="upbit-rows">' + rows + '</div>' +
+    '</div></div>';
+  }
+
+  let leverageHtml = '';
+  if (data.leverageEtfs && data.crypto && data.crypto.coins){
+    leverageHtml = LEVERAGE_ETF_PAIRS.map((pair, i) => {
+      const etf = data.leverageEtfs[i];
+      let underlyingSeries = null;
+      if (pair.underlyingKey === 'tsla'){
+        underlyingSeries = (data.tsla && !data.tsla.error) ? data.tsla.sparkline : null;
+      }else{
+        const coin = data.crypto.coins[pair.underlyingKey];
+        underlyingSeries = coin ? coin.sparkline : null;
+      }
+      if (!etf || etf.error || !underlyingSeries){
+        return '<div class="market-card"><div class="market-card-title">' + pair.etfName + '</div><div class="market-error">불러오기 실패</div></div>';
+      }
+      const etfReturn = cumulativeReturn(etf.sparkline);
+      const underlyingReturn = cumulativeReturn(underlyingSeries);
+      if (etfReturn == null || underlyingReturn == null){
+        return '<div class="market-card"><div class="market-card-title">' + pair.etfName + '</div><div class="market-error">계산 불가</div></div>';
+      }
+      const expected = underlyingReturn * pair.multiplier;
+      const gap = etfReturn - expected;
+      return '<div class="market-wide-card"><div class="market-wide-body" style="width:100%;">' +
+        '<div class="market-wide-title">' + pair.etfName + ' vs ' + pair.underlyingLabel + ' ×' + pair.multiplier + '</div>' +
+        '<div class="market-wide-value">' + pair.etfName + ' 30일 ' + (etfReturn >= 0 ? '+' : '') + etfReturn.toFixed(1) + '%</div>' +
+        '<div class="market-wide-note">' + pair.underlyingLabel + ' 30일 ' + (underlyingReturn >= 0 ? '+' : '') + underlyingReturn.toFixed(1) + '% · 이론상 기대치 ' + (expected >= 0 ? '+' : '') + expected.toFixed(1) + '% · 괴리 ' + (gap >= 0 ? '+' : '') + gap.toFixed(1) + '%p</div>' +
+      '</div></div>';
+    }).join('');
+  }
+
+  el.innerHTML =
+    '<div class="toolbar" style="padding:0 0 4px;">' +
+      '<span></span>' +
+      '<button class="refresh-btn" onclick="refreshMarket()">새로고침</button>' +
+    '</div>' +
+    buildMarketSummary(data) +
+    '<div class="market-section-title">국내외 지수</div>' +
+    '<div class="market-grid">' + indexCards + '</div>' +
+    '<div class="market-section-title">리스크 지표</div>' +
+    vixHtml + krwHtml +
+    '<div class="market-section-title">암호화폐</div>' +
+    buildCryptoOverallVerdict({
+      fng: data.crypto && data.crypto.fng,
+      activeAddr: data.activeAddr,
+      hashRateChangePct: data.btcOnchain && data.btcOnchain.hashRateChangePct,
+      funding: data.funding,
+      longShort: data.longShort
+    }) +
+    cryptoHtml +
+    (kimchiHtml ? '<div class="market-section-title">김치프리미엄</div>' + kimchiHtml : '') +
+    (onchainHtml ? '<div class="market-section-title">비트코인 온체인</div>' + buildOnchainInterpretation(data.btcOnchain, data.activeAddr) + onchainHtml : '') +
+    (futuresHtml ? '<div class="market-section-title">선물시장 지표</div>' + futuresHtml : '') +
+    (stablecoinHtml ? '<div class="market-section-title">유동성 지표</div>' + stablecoinHtml : '') +
+    (upbitTopHtml ? '<div class="market-section-title">업비트 거래대금 상위</div>' + upbitTopHtml : '') +
+    (leverageHtml ? '<div class="market-section-title">보유 레버리지 ETF vs 기초자산 (30일)</div>' + leverageHtml : '') +
+    '<div class="market-section-title">관심종목</div>' +
+    buildWatchlistInterpretation(data.watchlist) +
+    '<div class="market-grid">' + watchlistCards + '</div>' +
+    '<div class="market-section-title">매크로 지표</div>' +
+    buildMacroInterpretation(data.macro) +
+    '<div class="market-grid">' + macroCards + '</div>' +
+    '<div class="market-hint">카드를 누르면 확대 차트를 볼 수 있어요</div>';
+}
+
+/* ---------------- Chart modal ---------------- */
+function formatChartDate(ts){
+  const d = new Date(ts);
+  return (d.getMonth() + 1) + '/' + d.getDate();
+}
+
+function formatChartValue(v, unit){
+  if (unit === 'usd') return '$' + v.toLocaleString('en-US', { maximumFractionDigits: v < 10 ? 4 : 2 });
+  if (unit === 'pct') return v.toFixed(3) + '%';
+  if (unit === 'krw') return Math.round(v).toLocaleString('ko-KR') + '원';
+  return v.toLocaleString('ko-KR', { maximumFractionDigits: 2 });
+}
+
+async function fetchChartSeries(type, symbol, period, divideBy10){
+  if (type === 'yahoo'){
+    const map = {
+      '7d': { range:'5d', interval:'30m' },
+      '1mo': { range:'1mo', interval:'1d' },
+      '3mo': { range:'3mo', interval:'1d' },
+      '1y': { range:'1y', interval:'1wk' }
+    };
+    const cfg = map[period] || map['1mo'];
+    const result = await fetchYahooChart(symbol, cfg.range, cfg.interval);
+    const ts = result.timestamp || [];
+    const quote = result.indicators && result.indicators.quote && result.indicators.quote[0];
+    const closes = (quote && quote.close) || [];
+    const points = [];
+    for (let i = 0; i < ts.length; i++){
+      if (closes[i] == null) continue;
+      points.push({ t: ts[i] * 1000, v: divideBy10 ? closes[i] / 10 : closes[i] });
+    }
+    return points;
+  }
+  // coingecko
+  const daysMap = { '7d':7, '1mo':30, '3mo':90, '1y':365 };
+  const days = daysMap[period] || 30;
+  const res = await fetch('https://api.coingecko.com/api/v3/coins/' + symbol + '/market_chart?vs_currency=usd&days=' + days);
+  const data = await res.json();
+  return (data.prices || []).map(p => ({ t: p[0], v: p[1] }));
+}
+
+function renderInteractiveChart(container, points, unit){
+  if (!points || points.length < 2){
+    container.innerHTML = '<div class="market-error">차트 데이터를 불러오지 못했습니다.</div>';
+    return;
+  }
+  const w = 320, h = 160, padL = 6, padR = 6, padT = 10, padB = 6;
+  const values = points.map(p => p.v);
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = (max - min) || 1;
+  const plotW = w - padL - padR, plotH = h - padT - padB;
+
+  const xy = points.map((p, i) => ({
+    x: padL + (i / (points.length - 1)) * plotW,
+    y: padT + plotH - ((p.v - min) / range) * plotH,
+    t: p.t, v: p.v
+  }));
+
+  const pathD = xy.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+  const areaD = pathD + ' L' + xy[xy.length - 1].x.toFixed(1) + ',' + (padT + plotH) + ' L' + xy[0].x.toFixed(1) + ',' + (padT + plotH) + ' Z';
+  const color = xy[xy.length - 1].v >= xy[0].v ? '#E5484D' : '#3B82F6';
+
+  container.innerHTML =
+    '<svg viewBox="0 0 ' + w + ' ' + h + '" class="interactive-chart" id="chartSvg" preserveAspectRatio="none">' +
+      '<path d="' + areaD + '" fill="' + color + '" opacity="0.10" stroke="none"/>' +
+      '<path d="' + pathD + '" fill="none" stroke="' + color + '" stroke-width="1.8"/>' +
+      '<line id="chartGuide" x1="0" y1="' + padT + '" x2="0" y2="' + (padT + plotH) + '" stroke="#8B96A8" stroke-width="1" stroke-dasharray="3,3" visibility="hidden"/>' +
+      '<circle id="chartDot" r="3.5" fill="' + color + '" visibility="hidden"/>' +
+      '<rect x="0" y="0" width="' + w + '" height="' + h + '" fill="transparent" id="chartHitArea"/>' +
+    '</svg>' +
+    '<div class="chart-tooltip" id="chartTooltip"></div>' +
+    '<div class="chart-range-labels"><span>' + formatChartDate(xy[0].t) + '</span><span>' + formatChartDate(xy[xy.length - 1].t) + '</span></div>';
+
+  const svg = document.getElementById('chartSvg');
+  const hitArea = document.getElementById('chartHitArea');
+  const guide = document.getElementById('chartGuide');
+  const dot = document.getElementById('chartDot');
+  const tooltip = document.getElementById('chartTooltip');
+
+  function updateAt(clientX){
+    const rect = svg.getBoundingClientRect();
+    if (!rect.width) return;
+    const relX = ((clientX - rect.left) / rect.width) * w;
+    let idx = Math.round(((relX - padL) / plotW) * (xy.length - 1));
+    idx = Math.max(0, Math.min(xy.length - 1, idx));
+    const p = xy[idx];
+    guide.setAttribute('x1', p.x); guide.setAttribute('x2', p.x);
+    guide.setAttribute('visibility', 'visible');
+    dot.setAttribute('cx', p.x); dot.setAttribute('cy', p.y);
+    dot.setAttribute('visibility', 'visible');
+    tooltip.textContent = formatChartDate(p.t) + ' · ' + formatChartValue(p.v, unit);
+    tooltip.style.left = Math.min(Math.max((p.x / w) * 100, 12), 88) + '%';
+  }
+
+  hitArea.addEventListener('pointermove', (e) => { updateAt(e.clientX); });
+  hitArea.addEventListener('pointerdown', (e) => { updateAt(e.clientX); });
+  hitArea.addEventListener('pointerleave', () => {
+    guide.setAttribute('visibility', 'hidden');
+    dot.setAttribute('visibility', 'hidden');
+    tooltip.textContent = '';
+  });
+
+  updateAt(svg.getBoundingClientRect().right);
+}
+
+let chartModalState = { type:null, symbol:null, name:null, unit:null, divideBy10:false, period:'1mo' };
+
+async function loadChartPeriod(){
+  const container = document.getElementById('chartContainer');
+  container.innerHTML = '<div class="state" style="padding:30px 0;"><div class="spinner"></div>차트를 불러오는 중...</div>';
+  try{
+    const points = await fetchChartSeries(chartModalState.type, chartModalState.symbol, chartModalState.period, chartModalState.divideBy10);
+    renderInteractiveChart(container, points, chartModalState.unit);
+  }catch(e){
+    console.warn('chart load failed:', e.message || e);
+    container.innerHTML = '<div class="market-error">차트를 불러오지 못했습니다.</div>';
+  }
+}
+
+async function openChartModal(type, symbol, name, unit, divideBy10){
+  chartModalState = { type, symbol, name, unit, divideBy10, period: '1mo' };
+  document.getElementById('chartTitle').textContent = name;
+  document.querySelectorAll('.chart-period-btn').forEach(b => b.classList.toggle('active', b.dataset.period === '1mo'));
+  document.getElementById('chartModal').classList.remove('hidden');
+  await loadChartPeriod();
+}
+
+function closeChartModal(){
+  document.getElementById('chartModal').classList.add('hidden');
+}
+
+async function refreshMarket({ silent = false } = {}){
+  if (currentTab === 'market' && !silent){
+    document.getElementById('marketView').innerHTML =
+      '<div class="state"><div class="spinner"></div><b>시장 데이터를 불러오는 중입니다</b>지수·환율·암호화폐 시세를 모으고 있어요.</div>';
+  }
+  const data = await loadMarketData();
+  state.market = data;
+  if (currentTab === 'market') renderMarket(data);
+}
+
+async function initMarket(){
+  const cached = loadMarketCache();
+  if (cached){
+    state.market = cached;
+    if (currentTab === 'market') renderMarket(cached);
+    const age = Date.now() - (cached.ts || 0);
+    if (age < MARKET_STALE_MS) return;
+    refreshMarket({ silent: true });
+  }else{
+    refreshMarket({ silent: false });
+  }
+}
+
+/* ---------------- Weather ---------------- */
+const WEATHER_DEFAULT_LOC = { lat: 36.6424, lon: 127.4890, name: '청주' };
+const WEATHER_CACHE_KEY = CACHE_KEY_PREFIX + 'weather';
+const WEATHER_STALE_MS = 20 * 60 * 1000;
+
+function getGeoLocation(){
+  return new Promise((resolve) => {
+    if (!navigator.geolocation){ resolve(null); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      () => resolve(null),
+      { timeout: 6000, maximumAge: 10 * 60 * 1000 }
+    );
+  });
+}
+
+async function reverseGeocodeName(lat, lon){
+  try{
+    const res = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + lat + '&longitude=' + lon + '&localityLanguage=ko');
+    const data = await res.json();
+    return data.locality || data.city || data.principalSubdivision || '현재 위치';
+  }catch(e){
+    console.warn('reverse geocode failed:', e.message || e);
+    return '현재 위치';
+  }
+}
+
+function weatherCodeInfo(code){
+  const map = {
+    0: { icon:'☀️', label:'맑음' },
+    1: { icon:'🌤️', label:'대체로 맑음' },
+    2: { icon:'⛅', label:'구름 조금' },
+    3: { icon:'☁️', label:'흐림' },
+    45:{ icon:'🌫️', label:'안개' }, 48:{ icon:'🌫️', label:'서리 안개' },
+    51:{ icon:'🌦️', label:'약한 이슬비' }, 53:{ icon:'🌦️', label:'이슬비' }, 55:{ icon:'🌧️', label:'강한 이슬비' },
+    56:{ icon:'🌧️', label:'어는 이슬비' }, 57:{ icon:'🌧️', label:'강한 어는 이슬비' },
+    61:{ icon:'🌧️', label:'약한 비' }, 63:{ icon:'🌧️', label:'비' }, 65:{ icon:'🌧️', label:'강한 비' },
+    66:{ icon:'🌧️', label:'어는 비' }, 67:{ icon:'🌧️', label:'강한 어는 비' },
+    71:{ icon:'🌨️', label:'약한 눈' }, 73:{ icon:'❄️', label:'눈' }, 75:{ icon:'❄️', label:'강한 눈' },
+    77:{ icon:'🌨️', label:'싸락눈' },
+    80:{ icon:'🌦️', label:'약한 소나기' }, 81:{ icon:'🌧️', label:'소나기' }, 82:{ icon:'🌧️', label:'강한 소나기' },
+    85:{ icon:'🌨️', label:'약한 소낙눈' }, 86:{ icon:'🌨️', label:'소낙눈' },
+    95:{ icon:'⛈️', label:'뇌우' }, 96:{ icon:'⛈️', label:'우박 동반 뇌우' }, 99:{ icon:'⛈️', label:'강한 우박 동반 뇌우' }
+  };
+  return map[code] || { icon:'🌡️', label:'-' };
+}
+
+function pm25GradeKR(pm25){
+  if (pm25 == null) return null;
+  if (pm25 <= 15) return '좋음';
+  if (pm25 <= 35) return '보통';
+  if (pm25 <= 75) return '나쁨';
+  return '매우나쁨';
+}
+
+async function fetchWeatherData(lat, lon){
+  const forecastUrl = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
+    '&current=temperature_2m,apparent_temperature,weather_code' +
+    '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
+    '&timezone=auto';
+  const airUrl = 'https://air-quality-api.open-meteo.com/v1/air-quality?latitude=' + lat + '&longitude=' + lon + '&current=pm10,pm2_5';
+
+  const [forecastRes, airRes, locName] = await Promise.all([
+    fetch(forecastUrl).then(r => r.json()).catch(e => { console.warn('weather forecast failed:', e.message || e); return null; }),
+    fetch(airUrl).then(r => r.json()).catch(e => { console.warn('air quality failed:', e.message || e); return null; }),
+    reverseGeocodeName(lat, lon)
+  ]);
+
+  if (!forecastRes || !forecastRes.current) throw new Error('weather forecast unavailable');
+
+  return {
+    locName,
+    temp: forecastRes.current.temperature_2m,
+    feelsLike: forecastRes.current.apparent_temperature,
+    code: forecastRes.current.weather_code,
+    tMax: forecastRes.daily ? forecastRes.daily.temperature_2m_max[0] : null,
+    tMin: forecastRes.daily ? forecastRes.daily.temperature_2m_min[0] : null,
+    precipProb: forecastRes.daily ? forecastRes.daily.precipitation_probability_max[0] : null,
+    pm25: airRes && airRes.current ? airRes.current.pm2_5 : null,
+    pm10: airRes && airRes.current ? airRes.current.pm10 : null,
+    ts: Date.now()
+  };
+}
+
+async function loadWeather(){
+  let loc = await getGeoLocation();
+  if (!loc) loc = WEATHER_DEFAULT_LOC;
+  const data = await fetchWeatherData(loc.lat, loc.lon);
+  try{ localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify(data)); }catch(e){}
+  return data;
+}
+
+function loadWeatherCache(){
+  try{
+    const raw = localStorage.getItem(WEATHER_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+
+function renderWeather(data){
+  const el = document.getElementById('weatherWidget');
+  if (!data){
+    el.innerHTML = '<div class="weather-error">날씨 정보를 불러오지 못했습니다.</div>';
+    return;
+  }
+  const info = weatherCodeInfo(data.code);
+  const pm25Grade = pm25GradeKR(data.pm25);
+
+  const details = [];
+  if (data.tMax != null && data.tMin != null){
+    details.push('오늘 <b>' + Math.round(data.tMax) + '°</b> / <b>' + Math.round(data.tMin) + '°</b>');
+  }
+  if (data.precipProb != null){
+    details.push('강수확률 <b>' + Math.round(data.precipProb) + '%</b>');
+  }
+  if (pm25Grade){
+    details.push('미세먼지 <b>' + pm25Grade + '</b>' + (data.pm25 != null ? ' (PM2.5 ' + Math.round(data.pm25) + ')' : ''));
+  }
+
+  el.innerHTML =
+    '<div class="weather-main">' +
+      '<div class="weather-icon">' + info.icon + '</div>' +
+      '<div class="weather-body">' +
+        '<div class="weather-loc">' + escapeHtml(data.locName) + '</div>' +
+        '<div class="weather-temp">' + Math.round(data.temp) + '°C</div>' +
+        '<div class="weather-desc">' + info.label + (data.feelsLike != null ? ' · 체감 ' + Math.round(data.feelsLike) + '°C' : '') + '</div>' +
+      '</div>' +
+    '</div>' +
+    (details.length ? '<div class="weather-details">' + details.map(d => '<span>' + d + '</span>').join('') + '</div>' : '');
+}
+
+async function refreshWeather({ silent = false } = {}){
+  if (!silent){
+    document.getElementById('weatherWidget').innerHTML =
+      '<div class="state" style="padding:12px 0;"><div class="spinner"></div>날씨를 확인하는 중...</div>';
+  }
+  try{
+    const data = await loadWeather();
+    renderWeather(data);
+  }catch(e){
+    console.warn('weather load failed:', e.message || e);
+    const cached = loadWeatherCache();
+    if (cached) renderWeather(cached);
+    else renderWeather(null);
+  }
+}
+
+async function initWeather(){
+  const cached = loadWeatherCache();
+  if (cached){
+    renderWeather(cached);
+    const age = Date.now() - (cached.ts || 0);
+    if (age < WEATHER_STALE_MS) return;
+    refreshWeather({ silent: true });
+  }else{
+    refreshWeather({ silent: false });
+  }
+}
+
+/* ---------------- Render ---------------- */
+function renderState(html){
+  document.getElementById('list').innerHTML = '<div class="state">' + html + '</div>';
+}
+
+function renderList(ranked, tab){
+  const listEl = document.getElementById('list');
+  if (!ranked.length){
+    renderState('<b>표시할 기사가 없습니다</b>잠시 후 새로고침을 눌러 다시 시도해 주세요.');
+    return;
+  }
+  listEl.innerHTML = ranked.map((it, i) => {
+    const pct = Math.round(it.score * 100);
+    const rank = String(i + 1).padStart(2, '0');
+    const multi = it.sourceCount > 1 ? it.sourceCount + '개 매체 공통 · ' : '';
+    const intlTab = isIntlTab(tab);
+    const displayTitle = (intlTab && it.translatedTitle) ? it.translatedTitle : it.title;
+    const originalLine = (intlTab && it.translatedTitle && it.translatedTitle !== it.title)
+      ? '<div class="card-original">' + escapeHtml(it.title) + '</div>'
+      : '';
+    const metaRow = intlTab
+      ? '<div class="card-meta-row">' +
+          '<div class="card-meta">' + escapeHtml(it.source) + ' · ' + multi + timeAgo(it.pubDate) + '</div>' +
+          '<button class="translate-btn" data-idx="' + i + '">번역으로 보기</button>' +
+        '</div>'
+      : '<div class="card-meta">' + escapeHtml(it.source) + ' · ' + multi + timeAgo(it.pubDate) + '</div>';
+    const inner =
+      '<div class="rank">' + rank + '</div>' +
+      '<div class="card-body">' +
+        '<div class="card-title">' + escapeHtml(displayTitle) + '</div>' +
+        originalLine +
+        metaRow +
+        '<div class="score-bar"><div class="score-fill" style="width:' + pct + '%"></div></div>' +
+      '</div>';
+
+    // Both tabs: clicking the card opens the original article directly.
+    // Intl cards additionally carry a small "번역으로 보기" button that opens
+    // the in-app translated reader instead, without leaving the page.
+    return '<a class="card" href="' + it.link + '" target="_blank" rel="noopener">' + inner + '</a>';
+  }).join('');
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+function updateGauge(topDomestic, topIntl){
+  const combined = [...(topDomestic || []).slice(0, 5), ...(topIntl || []).slice(0, 5)];
+  if (!combined.length) return;
+  const avg = combined.reduce((s, it) => s + it.score, 0) / combined.length;
+  const top = combined.reduce((a, b) => (b.score > a.score ? b : a));
+
+  const dash = 207;
+  const offset = dash * (1 - avg);
+  document.getElementById('gauge-fill').setAttribute('stroke-dashoffset', offset.toFixed(1));
+
+  const angle = -90 + avg * 180; // -90(low) to +90(high) across the semicircle
+  document.getElementById('needle').setAttribute('transform', 'rotate(' + angle.toFixed(1) + ' 60 78)');
+
+  document.getElementById('gauge-headline').textContent = top.translatedTitle || top.title;
+  document.getElementById('gauge-label').textContent = '오늘의 최상위 이슈 · 지수 ' + Math.round(avg * 100);
+}
+
+/* ---------------- Controller ---------------- */
+async function refresh(tab, { forceNetwork = true, silent = false } = {}){
+  const tabLabel = { domestic:'국내', intl:'국외', finDomestic:'국내 금융', finIntl:'해외 금융', crypto:'암호화폐' }[tab] || tab;
+  if (currentTab === tab && !silent){
+    renderState('<div class="spinner"></div><b>' + tabLabel + ' 뉴스를 모으는 중입니다</b>여러 매체의 기사를 비교해 중요도를 계산하고 있어요.');
+  }
+
+  let items = null;
+  if (forceNetwork) items = await loadTab(tab);
+  if (!items){
+    const cached = loadCache(tab);
+    if (cached) items = cached.items;
+  }
+  if (!items){
+    if (currentTab === tab && !silent) renderState('<b>뉴스를 불러오지 못했습니다</b>모든 매체 연결이 실패했어요. 브라우저 개발자도구 콘솔(F12)에서 빨간색 에러 메시지를 확인하시거나, 잠시 후 새로고침을 눌러 주세요.');
+    return;
+  }
+
+  const useWeights = document.getElementById('weightToggle').checked;
+  const rankedFull = scoreItems(items, tab, useWeights);
+  const ranked = rankedFull.slice(0, TOP_N);
+
+  if (isIntlTab(tab)){
+    if (currentTab === tab && !silent){
+      renderState('<div class="spinner"></div><b>번역하는 중입니다</b>기사 제목을 한글로 옮기고 있어요.');
+    }
+    await translateItems(ranked);
+  }
+
+  state[tab] = ranked;
+
+  if (currentTab === tab) renderList(ranked, tab);
+  updateGauge(state.domestic, state.intl);
+
+  const now = new Date();
+  document.getElementById('lastUpdated').textContent = '마지막 업데이트 ' + now.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' });
+}
+
+// Cache-first startup: show whatever we already have instantly (this is what makes
+// returning to the app - e.g. via a mobile back button - feel instant instead of
+// re-collecting every feed from scratch). Only hits the network if the cache is
+// missing or older than STALE_MS, and does so quietly in the background.
+async function initTab(tab){
+  const cached = loadCache(tab);
+  if (cached && Array.isArray(cached.items) && cached.items.length){
+    const useWeights = document.getElementById('weightToggle').checked;
+    const ranked = scoreItems(cached.items, tab, useWeights).slice(0, TOP_N);
+    if (isIntlTab(tab)){
+      // reuse persisted translations where possible; anything missing falls back
+      // to the original title instantly rather than blocking on network calls
+      ranked.forEach(it => { it.translatedTitle = translationCache.get(it.title) || null; });
+    }
+    state[tab] = ranked;
+    if (currentTab === tab) renderList(ranked, tab);
+    updateGauge(state.domestic, state.intl);
+
+    const age = Date.now() - (cached.ts || 0);
+    if (age < STALE_MS) return; // fresh enough — skip refetch entirely
+    refresh(tab, { forceNetwork: true, silent: true });
+  }else{
+    refresh(tab, { forceNetwork: true, silent: false });
+  }
+}
+
+function switchTab(tab){
+  let target = tab;
+  if (tab === 'finance') target = isFinanceTab(currentTab) ? currentTab : 'finDomestic';
+  currentTab = target;
+
+  document.querySelectorAll('.tab').forEach(b => {
+    const bt = b.dataset.tab;
+    const active = (bt === target) || (bt === 'finance' && isFinanceTab(target));
+    b.classList.toggle('active', active);
+  });
+
+  const subbar = document.getElementById('financeSubtabs');
+  const showSub = isFinanceTab(target);
+  subbar.classList.toggle('hidden', !showSub);
+  if (showSub){
+    document.querySelectorAll('.fin-subtab').forEach(b => b.classList.toggle('active', b.dataset.fintab === target));
+  }
+
+  const listEl = document.getElementById('list');
+  const marketEl = document.getElementById('marketView');
+  const toolbarEl = document.getElementById('newsToolbar');
+
+  if (target === 'market'){
+    listEl.classList.add('hidden');
+    toolbarEl.classList.add('hidden');
+    marketEl.classList.remove('hidden');
+    if (state.market) renderMarket(state.market);
+    else refreshMarket({ silent: false });
+    return;
+  }
+
+  listEl.classList.remove('hidden');
+  toolbarEl.classList.remove('hidden');
+  marketEl.classList.add('hidden');
+  if (state[target]) renderList(state[target], target);
+  else refresh(target);
+}
+
+function setDatestamp(){
+  const now = new Date();
+  const days = ['일','월','화','수','목','금','토'];
+  const dateStr = now.getFullYear() + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + String(now.getDate()).padStart(2,'0');
+  const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('datestamp').innerHTML = dateStr + '(' + days[now.getDay()] + ') <b>' + timeStr + '</b>';
+}
+
+/* ---------------- Article reader modal ---------------- */
+async function openArticleModal(item){
+  const modal = document.getElementById('articleModal');
+  const body = document.getElementById('modalBody');
+  const originalLink = document.getElementById('modalOriginal');
+  originalLink.href = item.link;
+  modal.classList.remove('hidden');
+  body.innerHTML = '<div class="state"><div class="spinner"></div><b>기사를 번역하는 중입니다</b>원문을 가져와 한글로 옮기고 있어요.</div>';
+
+  const titleKo = item.translatedTitle || await translateToKorean(item.title);
+  let bodyKo = '';
+  let note = '';
+
+  try{
+    const rawText = await fetchArticleText(item.link);
+    bodyKo = await translateLongText(rawText);
+  }catch(e){
+    console.warn('full article translate failed, falling back to summary:', e.message || e);
+    try{
+      bodyKo = item.description ? await translateToKorean(item.description) : '';
+      note = '<p class="modal-note">전체 기사를 불러오지 못해 요약만 번역했습니다. "원문 보기"에서 전체 내용을 확인하세요.</p>';
+    }catch(e2){
+      note = '<p class="modal-note">번역에 실패했습니다. "원문 보기"에서 원문을 확인해 주세요.</p>';
+    }
+  }
+
+  const paragraphsHtml = bodyKo.split('\n').filter(Boolean).map(p => '<p>' + escapeHtml(p) + '</p>').join('');
+  body.innerHTML = '<div class="modal-title">' + escapeHtml(titleKo) + '</div>' + note + (paragraphsHtml || '');
+}
+
+function closeArticleModal(){
+  document.getElementById('articleModal').classList.add('hidden');
+}
+
+document.getElementById('list').addEventListener('click', (e) => {
+  const btn = e.target.closest('.translate-btn');
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const item = state[currentTab] && state[currentTab][Number(btn.dataset.idx)];
+  if (item) openArticleModal(item);
+});
+document.getElementById('modalClose').addEventListener('click', closeArticleModal);
+document.getElementById('articleModal').addEventListener('click', (e) => {
+  if (e.target.id === 'articleModal') closeArticleModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape'){ closeArticleModal(); closeChartModal(); }
+});
+
+document.getElementById('marketView').addEventListener('click', (e) => {
+  const card = e.target.closest('.market-card[data-chart-symbol]');
+  if (!card) return;
+  openChartModal(
+    card.dataset.chartType,
+    card.dataset.chartSymbol,
+    card.dataset.chartName,
+    card.dataset.chartUnit,
+    card.dataset.chartDivide10 === '1'
+  );
+});
+document.getElementById('chartModalClose').addEventListener('click', closeChartModal);
+document.getElementById('chartModal').addEventListener('click', (e) => {
+  if (e.target.id === 'chartModal') closeChartModal();
+});
+document.querySelectorAll('.chart-period-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    chartModalState.period = btn.dataset.period;
+    document.querySelectorAll('.chart-period-btn').forEach(b => b.classList.toggle('active', b === btn));
+    loadChartPeriod();
+  });
+});
+
+/* ---------------- Init ---------------- */
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+document.querySelectorAll('.fin-subtab').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.fintab));
+});
+document.getElementById('refreshBtn').addEventListener('click', () => refresh(currentTab));
+document.getElementById('weightToggle').addEventListener('change', async () => {
+  if (state[currentTab]){
+    const useWeights = document.getElementById('weightToggle').checked;
+    const cached = loadCache(currentTab);
+    if (cached){
+      const ranked = scoreItems(cached.items, currentTab, useWeights).slice(0, TOP_N);
+      if (isIntlTab(currentTab)) await translateItems(ranked);
+      state[currentTab] = ranked;
+      renderList(ranked, currentTab);
+      updateGauge(state.domestic, state.intl);
+    }
+  }
+});
+
+setDatestamp();
+setInterval(setDatestamp, 60000);
+initTab('domestic');
+initTab('intl');
+initMarket();
+initWeather();
+
+if ('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(e => console.warn('SW registration failed', e));
+  });
+}
+</script>
+</body>
+</html>
+
