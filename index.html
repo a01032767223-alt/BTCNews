@@ -1267,10 +1267,22 @@ async function loadCryptoSection(){
 
     const ethBtcRatio = (coins.eth.price && coins.btc.price) ? (coins.eth.price / coins.btc.price) : null;
 
+    async function fetchJsonWithRetry(url, retries){
+      for (let i = 0; i <= retries; i++){
+        try{
+          const res = await fetch(url);
+          if (!res.ok) throw new Error('http=' + res.status);
+          return await res.json();
+        }catch(e){
+          if (i === retries) throw e;
+          await new Promise(r => setTimeout(r, 800 * (i + 1)));
+        }
+      }
+    }
+
     let fng = null;
     try{
-      const fngRes = await fetch('https://api.alternative.me/fng/?limit=1');
-      const fngData = await fngRes.json();
+      const fngData = await fetchJsonWithRetry('https://api.alternative.me/fng/?limit=1', 2);
       const d0 = fngData && fngData.data && fngData.data[0];
       if (d0) fng = { value: Number(d0.value), label: d0.value_classification };
     }catch(e){
@@ -1279,8 +1291,7 @@ async function loadCryptoSection(){
 
     let globalStats = null;
     try{
-      const gRes = await fetch('https://api.coingecko.com/api/v3/global');
-      const gData = await gRes.json();
+      const gData = await fetchJsonWithRetry('https://api.coingecko.com/api/v3/global', 2);
       const d = gData && gData.data;
       if (d){
         globalStats = {
@@ -1927,6 +1938,11 @@ function renderMarket(data){
           '<div class="market-wide-value">' + c.fng.value + ' <span style="font-size:12px;color:var(--text-muted);font-weight:400;">(' + escapeHtml(koreanFngLabel(c.fng.label)) + ')</span></div>' +
           fngBarHtml(c.fng.value) +
         '</div></div>';
+    }else{
+      fngHtml = '<div class="market-wide-card"><div class="market-wide-body" style="width:100%;">' +
+          '<div class="market-wide-title">공포·탐욕 지수 (Fear &amp; Greed Index)</div>' +
+          '<div class="market-error">불러오지 못했습니다. 새로고침을 눌러 다시 시도해 주세요.</div>' +
+        '</div></div>';
     }
 
     let globalHtml = '';
@@ -1964,6 +1980,11 @@ function renderMarket(data){
           '</div>' +
         '</div>';
       }
+    }else{
+      globalHtml = '<div class="market-wide-card"><div class="market-wide-body" style="width:100%;">' +
+          '<div class="market-wide-title">전체 시가총액 · BTC 도미넌스</div>' +
+          '<div class="market-error">불러오지 못했습니다. 새로고침을 눌러 다시 시도해 주세요.</div>' +
+        '</div></div>';
     }
 
     const ratioHtml = c.ethBtcRatio != null
